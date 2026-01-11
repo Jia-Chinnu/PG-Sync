@@ -1,0 +1,13 @@
+body { font-family: 'Arial', sans-serif; margin: 0; }
+.hero {
+    height: 80vh;
+    background: url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1350&q=80');
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+}
+.overlay { background: rgba(0,0,0,0.6); padding: 50px; border-radius: 15px; }
+.btn { background: #2ecc71; padding: 10px 20px; color: white; text-decoration: none; border-radius: 5px; }
