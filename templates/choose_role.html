@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Select Role | PG-Sync</title>
+</head>
+<body>
+    <div style="text-align:center; padding-top:10vh;">
+        <h1>Select Your Role</h1>
+        <form action="/choose-role" method="POST" style="display:flex; justify-content:center; gap:20px; margin-top:50px;">
+            <button type="submit" name="role" value="owner" class="glass-card" style="cursor:pointer; width:250px;">
+                <h1 style="font-size:50px;">🏠</h1>
+                <h3>House Owner</h3>
+            </button>
+            <button type="submit" name="role" value="resident" class="glass-card" style="cursor:pointer; width:250px;">
+                <h1 style="font-size:50px;">👤</h1>
+                <h3>Resident</h3>
+            </button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<h2>Complaints</h2>
+
+<form method="POST">
+<input name="message" placeholder="Your issue">
+<button>Submit</button>
+</form>
+
+<ul>
+{% for c in complaints %}
+<li>{{c[2]}} - {{c[3]}}</li>
+{% endfor %}
+</ul>

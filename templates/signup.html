@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PG Sync | Create Account</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#000,#111);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+}
+.signup-box{
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(15px);
+    padding:45px 40px;
+    border-radius:18px;
+    width:100%;
+    max-width:420px;
+}
+.input-group{margin-bottom:15px}
+input,select{
+    width:100%;
+    padding:14px;
+    background:black;
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:12px;
+    color:white;
+}
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:30px;
+    background:white;
+    font-weight:600;
+    cursor:pointer;
+}
+.hidden{display:none}
+.alert{
+    padding:10px;
+    margin-bottom:15px;
+    border-radius:10px;
+    text-align:center;
+}
+.alert.success{background:#00ff88;color:#000;}
+.alert.error{background:#ff4d4d;color:#000;}
+</style>
+
+<script>
+function toggleResidentFields(){
+    const role = document.getElementById("role").value;
+    document.getElementById("residentFields").style.display =
+        role === "resident" ? "block" : "none";
+}
+</script>
+</head>
+
+<body>
+
+<div class="signup-box">
+<h2>Create Account</h2>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, msg in messages %}
+      <div class="alert {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST">
+
+<div class="input-group">
+    <input name="name" placeholder="Full Name" required>
+</div>
+
+<div class="input-group">
+    <input name="email" type="email" placeholder="Email" required>
+</div>
+
+<div class="input-group">
+    <input name="password" type="password" placeholder="Password" required>
+</div>
+
+<div class="input-group">
+    <select name="role" id="role" onchange="toggleResidentFields()" required>
+        <option value="">Select Account Type</option>
+        <option value="owner">PG Owner</option>
+        <option value="resident">Resident</option>
+    </select>
+</div>
+
+<!-- RESIDENT FIELDS -->
+<div id="residentFields" class="hidden">
+    <div class="input-group">
+        <input name="resident_id" placeholder="Resident ID (e.g. RES101)">
+    </div>
+</div>
+
+<button type="submit">Create Account</button>
+</form>
+
+<p style="margin-top:20px;text-align:center">
+    Already have an account? <a href="/login" style="color:white">Login</a>
+</p>
+
+</div>
+</body>
+</html>

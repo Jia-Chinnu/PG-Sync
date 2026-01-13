@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Owner Dashboard | PG-Sync</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+/* ===== YOUR ORIGINAL CSS — UNTOUCHED ===== */
+:root{
+    --blue:#00f2ff; --purple:#7000ff;
+    --bg:linear-gradient(135deg,#0c0c1a,#1a0033,#03000a);
+    --glass:rgba(255,255,255,.08);
+    --danger:#ff4d4d; --success:#00ff88;
+    --shadow:0 25px 45px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Outfit',sans-serif;background:var(--bg);color:#fff}
+.container{max-width:1400px;margin:auto;padding:30px}
+header{display:flex;justify-content:space-between;align-items:center;
+    padding:25px;background:var(--glass);border-radius:24px;box-shadow:var(--shadow)}
+.card{background:var(--glass);padding:30px;border-radius:24px;margin-bottom:30px;box-shadow:var(--shadow)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:25px}
+input,select,button{width:100%;padding:14px;border-radius:14px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;margin-bottom:15px}
+button{background:linear-gradient(135deg,var(--blue),var(--purple));color:#000;font-weight:700}
+.extra-bill{display:flex;gap:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px}
+th{color:var(--blue)}
+.status.paid{color:var(--success)}
+.status.pending{color:var(--danger)}
+.logout{color:#ff8080;text-decoration:none}
+.summary-box{
+    background:rgba(0,0,0,.35);
+    border:1px dashed var(--blue);
+    border-radius:16px;
+    padding:15px;
+    margin-top:10px;
+}
+.summary-box div{
+    display:flex;
+    justify-content:space-between;
+    font-weight:600;
+    margin:6px 0;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <h2>PG-SYNC <b>OWNER</b></h2>
+    <a href="/logout" class="logout">Logout</a>
+</header>
+
+<div class="card-grid">
+
+<!-- ================= RESIDENT PAYMENTS ================= -->
+<div class="card">
+<h3>Resident Payments</h3>
+<table>
+<thead>
+<tr>
+<th>Resident</th><th>Room</th><th>Bill</th>
+<th>Total</th><th>Paid</th><th>Due</th><th>Status</th><th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for p in payments %}
+<tr>
+<td>{{ p.resident }}</td>
+<td>{{ p.room_no }}</td>
+<td>{{ p.title }}</td>
+<td>₹ {{ "%.2f"|format(p.amount) }}</td>
+<td>₹ {{ "%.2f"|format(p.amount_paid or 0) }}</td>
+<td>₹ {{ "%.2f"|format(p.due) }}</td>
+<td>
+{% if p.due <= 0 %}
+<span class="status paid">PAID</span>
+{% elif p.amount_paid > 0 %}
+<span class="status pending" style="color:#ffc107">PARTIAL</span>
+{% else %}
+<span class="status pending">PENDING</span>
+{% endif %}
+</td>
+<td>
+{% if p.due > 0 %}
+<a href="/confirm-payment/{{ p.pay_id }}">Mark Paid</a>
+{% else %}
+✔
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<!-- ================= ADD PROPERTY ================= -->
+<div class="card">
+<h3>Add Property</h3>
+<form method="POST" action="/add-property">
+<input name="property_name" placeholder="Property Name" required>
+<input name="address" placeholder="Address">
+<input name="phone" placeholder="Phone">
+<button>Add Property</button>
+</form>
+</div>
+
+<!-- ================= ADD ROOM ================= -->
+<div class="card">
+<h3>Add Room</h3>
+<form method="POST" action="/add-room">
+<select name="property_id" required>
+<option value="">Select Property</option>
+{% for p in properties %}
+<option value="{{ p.id }}">{{ p.name }}</option>
+{% endfor %}
+</select>
+<input name="room_no" placeholder="Room No" required>
+<input name="capacity" type="number" placeholder="Capacity" required>
+<button>Add Room</button>
+</form>
+</div>
+
+<!-- ================= ADD RESIDENT ================= -->
+<div class="card">
+<h3>Add Resident</h3>
+<form method="POST" action="/add-resident">
+<input name="resident_id" placeholder="Resident UID" required>
+<input name="email" type="email" placeholder="Email" required>
+<select name="property_id" required>
+<option value="">Select Property</option>
+{% for p in properties %}
+<option value="{{ p.id }}">{{ p.name }}</option>
+{% endfor %}
+</select>
+<select name="room_id" required>
+<option value="">Select Room</option>
+{% for r in rooms %}
+<option value="{{ r.id }}">{{ r.room_no }}</option>
+{% endfor %}
+</select>
+<button>Add Resident</button>
+</form>
+</div>
+
+<!-- ================= ADD BILLS (ENHANCED) ================= -->
+<div class="card">
+<h3>Add Bills</h3>
+
+<form method="POST" action="/add-bills" id="billForm">
+
+<h4>Common Bills</h4>
+{% set common = ['Rent','Electricity','Water','Maintenance'] %}
+{% for bill in common %}
+<input type="hidden" name="bills[{{ loop.index0 }}][title]" value="{{ bill }}">
+<input type="number" class="bill-amount"
+       name="bills[{{ loop.index0 }}][amount]"
+       placeholder="{{ bill }} Amount ₹"
+       oninput="recalc()" required>
+{% endfor %}
+
+<h4>Extra Bills</h4>
+<div id="extra-bills"></div>
+
+<button type="button" onclick="addExtraBill()">+ Add Extra Bill</button>
+
+<h4>Property & Room</h4>
+<select name="property_id" required>
+<option value="">Select Property</option>
+{% for p in properties %}
+<option value="{{ p.id }}">{{ p.name }}</option>
+{% endfor %}
+</select>
+
+<select name="room_id" id="roomSelect" onchange="recalc()" required>
+<option value="">Select Room</option>
+{% for r in rooms %}
+<option value="{{ r.id }}" data-capacity="{{ r.capacity }}">
+Room {{ r.room_no }} ({{ r.capacity }} residents)
+</option>
+{% endfor %}
+</select>
+
+<!-- 🔥 NEW SUMMARY (NO FUNCTION LOST) -->
+<div class="summary-box">
+<div>Total Bill <span>₹ <span id="total">0.00</span></span></div>
+<div>Residents <span id="count">0</span></div>
+<div>Per Resident <span>₹ <span id="split">0.00</span></span></div>
+</div>
+
+<button>Add & Split Bills</button>
+</form>
+</div>
+
+</div>
+</div>
+
+<script>
+let extraCount = {{ common|length }};
+
+function addExtraBill(){
+    document.getElementById('extra-bills').insertAdjacentHTML('beforeend',`
+    <div class="extra-bill">
+        <input name="bills[${extraCount}][title]" placeholder="Bill Title" required>
+        <input type="number" class="bill-amount"
+               name="bills[${extraCount}][amount]"
+               placeholder="Amount ₹"
+               oninput="recalc()" required>
+    </div>`);
+    extraCount++;
+}
+
+function recalc(){
+    let total = 0;
+    document.querySelectorAll('.bill-amount').forEach(i=>{
+        total += parseFloat(i.value || 0);
+    });
+    document.getElementById('total').innerText = total.toFixed(2);
+
+    const room = document.getElementById('roomSelect');
+    const count = room.selectedOptions[0]?.dataset.capacity || 0;
+    document.getElementById('count').innerText = count;
+
+    document.getElementById('split').innerText =
+        count > 0 ? (total / count).toFixed(2) : '0.00';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Resident Dashboard | PG-Sync</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#0a0a23,#1a1a2e,#16213e);
+color:white;
+min-height:100vh;
+padding:20px
+}
+.dashboard-container{max-width:1200px;margin:auto}
+.dashboard-header{
+background:rgba(255,255,255,.05);
+padding:40px;
+border-radius:25px;
+text-align:center;
+margin-bottom:40px;
+position:relative
+}
+.dashboard-title{
+font-size:2.5rem;
+font-weight:700;
+background:linear-gradient(135deg,#00d4ff,#fff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent
+}
+.logout{
+position:absolute;
+top:30px;
+right:30px;
+color:#ff6b6b;
+text-decoration:none
+}
+.due-card{
+background:linear-gradient(135deg,rgba(255,193,7,.2),rgba(255,152,0,.2));
+border:2px solid rgba(255,193,7,.4);
+padding:30px;
+border-radius:20px;
+text-align:center;
+margin-bottom:40px
+}
+.due-amount{font-size:3rem;color:#ffc107;font-weight:700}
+.section-card{
+background:rgba(255,255,255,.03);
+border-radius:20px;
+margin-bottom:30px;
+overflow:hidden
+}
+.section-header{
+background:rgba(255,255,255,.06);
+padding:20px;
+display:flex;
+align-items:center;
+gap:10px
+}
+.custom-table{
+width:100%;
+border-collapse:collapse
+}
+.custom-table th{
+background:rgba(0,212,255,.1);
+padding:15px;
+font-size:.8rem
+}
+.custom-table td{
+padding:15px;
+border-bottom:1px solid rgba(255,255,255,.05);
+text-align:center
+}
+.badge-pending{
+background:#ffc107;
+color:black;
+padding:5px 15px;
+border-radius:20px;
+font-weight:600
+}
+.pay-btn{
+background:linear-gradient(135deg,#28a745,#20c997);
+color:white;
+padding:8px 18px;
+border-radius:25px;
+text-decoration:none;
+font-weight:600
+}
+.reason-input{
+background:rgba(255,255,255,.1);
+border:1px solid rgba(255,255,255,.2);
+color:white;
+padding:6px;
+border-radius:10px
+}
+.complaint-textarea{
+width:100%;
+padding:15px;
+border-radius:15px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.1);
+color:white
+}
+.complaint-submit{
+margin-top:10px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:15px;
+background:#00d4ff;
+font-weight:700;
+cursor:pointer
+}
+</style>
+</head>
+
+<body>
+<div class="dashboard-container">
+
+<div class="dashboard-header">
+<h1 class="dashboard-title">Resident Dashboard</h1>
+<a href="/logout" class="logout"><i class="bi bi-power"></i> Logout</a>
+</div>
+
+<div class="due-card">
+<div class="due-amount">₹
+{% set total = namespace(val=0) %}
+{% for p in payments %}
+{% if p.status == 'pending' %}
+{% set total.val = total.val + p.amount %}
+{% endif %}
+{% endfor %}
+{{ "%.2f"|format(total.val) }}
+</div>
+<div>Total Outstanding</div>
+</div>
+
+<div class="section-card">
+<div class="section-header">
+<i class="bi bi-clock-history"></i>
+<h3>Pending Bills</h3>
+</div>
+
+<table class="custom-table">
+<thead>
+<tr>
+<th>Bill</th>
+<th>Amount</th>
+<th>Status</th>
+<th>Reason</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for p in payments if p.status=='pending' %}
+<tr>
+<td>{{ p.title }}<br><small>{{ p.bill_date }}</small></td>
+<td>₹{{ p.amount }}</td>
+<td><span class="badge-pending">PENDING</span></td>
+<td>
+<form method="POST">
+<input type="hidden" name="payment_id" value="{{ p.payment_id }}">
+<input name="reason" value="{{ p.reason or '' }}" class="reason-input">
+<button type="submit" style="background:none;border:none;color:#00d4ff">
+<i class="bi bi-check-circle"></i>
+</button>
+</form>
+</td>
+<td>
+<a href="{{ url_for('pay_bill', pay_id=p.pay_id) }}" class="pay-btn">Pay</a>
+
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="section-card" style="padding:25px">
+<h3><i class="bi bi-chat-dots"></i> Complaint</h3>
+<form method="POST" action="/complaint">
+<textarea name="complaint" class="complaint-textarea" required></textarea>
+<button class="complaint-submit">Submit</button>
+</form>
+</div>
+
+<div class="section-card">
+<div class="section-header">
+<i class="bi bi-check-circle"></i>
+<h3>Payment History</h3>
+</div>
+
+<table class="custom-table">
+<thead>
+<tr>
+<th>Bill</th>
+<th>Amount</th>
+<th>Status</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody>
+{% for p in payments if p.status=='paid' %}
+<tr>
+<td>{{ p.title }}</td>
+<td>₹{{ p.amount }}</td>
+<td style="color:#28a745">PAID</td>
+<td>{{ p.bill_date }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+</div>
+</body>
+</html>

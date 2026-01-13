@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resident Verification | PG Sync</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 360px;
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            animation: fadeUp 0.8s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .card p {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #22c55e;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(34,197,94,0.4);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <form class="card" method="POST">
+        <h2>Resident Verification</h2>
+        <p>Please verify to access your dashboard</p>
+
+        <div class="field">
+            <label>Resident ID</label>
+            <input type="text" name="resident_id" placeholder="Enter your Resident ID" required>
+        </div>
+
+        <div class="field">
+            <label>Room Number</label>
+            <input type="text" name="room_no" placeholder="Enter your Room No" required>
+        </div>
+
+        <button class="btn" type="submit">
+            Verify & Continue
+        </button>
+
+        <div class="footer">
+            PG Sync • Secure Access
+        </div>
+    </form>
+
+</body>
+</html>
