@@ -1,19 +1,249 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <title>Login | PG-Sync</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | PG Sync Hub</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #008730;
+            --primary-glow: rgba(0, 135, 48, 0.1);
+            --dark: #0F172A;
+            --glass: rgba(255, 255, 255, 0.95);
+            --error: #ff3333;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        
+        body { 
+            background: #ffffff;
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- PARALLAX BACKGROUND --- */
+        .parallax-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; pointer-events: none; overflow: hidden;
+        }
+
+        .glow-mesh {
+            position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(0, 135, 48, 0.08) 0%, transparent 70%);
+            border-radius: 50%; top: -10%; right: -10%;
+            animation: drift 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0,0); }
+            to { transform: translate(-100px, 50px); }
+        }
+
+        .geo-element {
+            position: absolute; border: 1.5px solid var(--primary-glow);
+            border-radius: 10px; transition: transform 0.2s ease-out;
+        }
+        .geo-1 { width: 300px; height: 300px; border-radius: 50%; top: 5%; left: -5%; border-width: 25px; }
+        .geo-2 { width: 150px; height: 150px; top: 70%; right: 10%; transform: rotate(45deg); border-width: 10px; border-style: dashed; }
+
+        /* --- LOGIN CARD --- */
+        .login-card {
+            width: 440px; background: var(--glass); backdrop-filter: blur(20px);
+            padding: 60px 45px; border-radius: 45px;
+            border: 1px solid rgba(0, 135, 48, 0.1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.06);
+            text-align: center; z-index: 10;
+        }
+
+        /* --- HIGH-LEVEL SCANNER UI --- */
+        .scanner-portal {
+            width: 130px; height: 130px; margin: 0 auto 35px;
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+
+        .dotted-orbit {
+            position: absolute; width: 100%; height: 100%;
+            border: 2px dotted var(--primary);
+            border-radius: 50%;
+            animation: rotateOrbit 10s linear infinite;
+        }
+
+        @keyframes rotateOrbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .inner-scanner {
+            width: 90px; height: 90px; background: white;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; position: relative;
+            box-shadow: 0 10px 30px var(--primary-glow);
+            border: 2px solid #f1f5f9; overflow: hidden;
+        }
+
+        .inner-scanner i { font-size: 40px; color: var(--primary); z-index: 2; }
+
+        .laser-bar {
+            position: absolute; width: 100%; height: 3px;
+            background: var(--primary); box-shadow: 0 0 15px var(--primary);
+            top: 0; left: 0; animation: scanMove 3s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        @keyframes scanMove {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+
+        h2 { font-size: 28px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; }
+        p { color: #64748B; font-size: 14px; margin-bottom: 40px; }
+
+        /* --- FORM --- */
+        .form-group { margin-bottom: 25px; position: relative; }
+        .form-group i {
+            position: absolute; left: 22px; top: 50%;
+            transform: translateY(-50%); color: var(--primary); font-size: 18px;
+        }
+
+        input {
+            width: 100%; padding: 18px 20px 18px 60px;
+            border-radius: 16px; border: 1px solid #E2E8F0;
+            background: #F8FAFC; outline: none; transition: 0.4s;
+            font-size: 15px; font-weight: 500;
+        }
+
+        input:focus {
+            border-color: var(--primary); background: #fff;
+            box-shadow: 0 10px 25px var(--primary-glow);
+        }
+
+        .btn-hub {
+            width: 100%; padding: 18px; background: var(--primary);
+            color: white; border: none; border-radius: 16px;
+            font-weight: 700; font-size: 16px; cursor: pointer;
+            transition: 0.4s; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .btn-hub:hover { background: var(--dark); transform: translateY(-3px); }
+
+        /* --- ERROR POPUP --- */
+        .error-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        .error-popup {
+            background: white; width: 360px; padding: 40px;
+            border-radius: 35px; text-align: center;
+            border: 2px solid var(--error);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+            animation: glitchPop 0.4s ease-out;
+        }
+
+        @keyframes glitchPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .error-icon { font-size: 50px; color: var(--error); margin-bottom: 20px; }
+        .btn-close {
+            background: var(--dark); color: white; border: none;
+            padding: 12px 30px; border-radius: 12px;
+            font-weight: 600; cursor: pointer; width: 100%;
+        }
+
+        .brand-nav { position: fixed; top: 40px; text-decoration: none; color: var(--dark); font-weight: 800; font-size: 24px; }
+    </style>
 </head>
 <body>
-    <div style="display:flex; justify-content:center; align-items:center; height:100vh;">
-        <div class="glass-card" style="width: 350px;">
-            <h2>Welcome to PG-Sync</h2>
-            <form action="/login" method="POST">
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit" class="btn-primary">Sign In</button>
-            </form>
+
+    <div class="parallax-bg">
+        <div class="glow-mesh"></div>
+        <div class="geo-element geo-1" data-speed="0.1"></div>
+        <div class="geo-element geo-2" data-speed="-0.2"></div>
+    </div>
+
+    <div class="error-overlay" id="errorOverlay">
+        <div class="error-popup">
+            <div class="error-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3>Sync Failed</h3>
+            <p id="errorMsg" style="margin-bottom: 25px; color: #64748B;">Invalid details provided.</p>
+            <button class="btn-close" onclick="closePopup()">Try Again</button>
         </div>
     </div>
+
+    <a href="/" class="brand-nav">PG<span>Sync.</span></a>
+
+    <div class="login-card">
+        <div class="scanner-portal">
+            <div class="dotted-orbit"></div>
+            <div class="inner-scanner">
+                <div class="laser-bar"></div>
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+        </div>
+
+        <h2>Hub Authentication</h2>
+        <p>Verify your technical session</p>
+
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <i class="fa-solid fa-at"></i>
+                <input type="email" name="email" placeholder="Administrator Email" required>
+            </div>
+            
+            <div class="form-group">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" name="password" placeholder="Access Code" required>
+            </div>
+
+            <button type="submit" class="btn-hub">Authorize Hub</button>
+        </form>
+
+        <div style="margin-top: 30px; font-size: 13px;">
+            <a href="/signup" style="color:var(--primary); text-decoration: none; font-weight: 700;">Request System Access</a>
+        </div>
+    </div>
+
+    <script>
+        // Parallax Logic
+        document.addEventListener('mousemove', (e) => {
+            const shapes = document.querySelectorAll('.geo-element');
+            const x = (window.innerWidth / 2 - e.pageX);
+            const y = (window.innerHeight / 2 - e.pageY);
+            shapes.forEach(shape => {
+                const speed = shape.getAttribute('data-speed');
+                shape.style.transform = `translate(${x * speed}px, ${y * speed}px) rotate(${x * speed * 0.1}deg)`;
+            });
+        });
+
+        function closePopup() {
+            document.getElementById('errorOverlay').style.display = 'none';
+        }
+
+        // --- FLASK INTEGRATION (Corrected) ---
+        window.onload = function() {
+            {% with messages = get_flashed_messages(with_categories=True) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  {% if category == 'error' %}
+                    document.getElementById('errorOverlay').style.display = 'flex';
+                    document.getElementById('errorMsg').innerText = "{{ message }}";
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+        }
+    </script>
 </body>
 </html>

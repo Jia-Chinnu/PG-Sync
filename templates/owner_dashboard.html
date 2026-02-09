@@ -1,236 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Owner Dashboard | PG-Sync</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center | PG Sync Pro</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #008730;
+            --primary-light: #e6f4ea;
+            --primary-glow: rgba(0, 135, 48, 0.1);
+            --error: #ff4757;
+            --error-light: #fff1f2;
+            --warning: #ffa502;
+            --dark: #0f172a;
+            --bg: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --border: rgba(0, 135, 48, 0.15);
+        }
 
-<style>
-/* ===== YOUR ORIGINAL CSS — UNTOUCHED ===== */
-:root{
-    --blue:#00f2ff; --purple:#7000ff;
-    --bg:linear-gradient(135deg,#0c0c1a,#1a0033,#03000a);
-    --glass:rgba(255,255,255,.08);
-    --danger:#ff4d4d; --success:#00ff88;
-    --shadow:0 25px 45px rgba(0,0,0,.4);
-}
-*{box-sizing:border-box}
-body{margin:0;font-family:'Outfit',sans-serif;background:var(--bg);color:#fff}
-.container{max-width:1400px;margin:auto;padding:30px}
-header{display:flex;justify-content:space-between;align-items:center;
-    padding:25px;background:var(--glass);border-radius:24px;box-shadow:var(--shadow)}
-.card{background:var(--glass);padding:30px;border-radius:24px;margin-bottom:30px;box-shadow:var(--shadow)}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:25px}
-input,select,button{width:100%;padding:14px;border-radius:14px;
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;margin-bottom:15px}
-button{background:linear-gradient(135deg,var(--blue),var(--purple));color:#000;font-weight:700}
-.extra-bill{display:flex;gap:12px}
-table{width:100%;border-collapse:collapse}
-th,td{padding:14px}
-th{color:var(--blue)}
-.status.paid{color:var(--success)}
-.status.pending{color:var(--danger)}
-.logout{color:#ff8080;text-decoration:none}
-.summary-box{
-    background:rgba(0,0,0,.35);
-    border:1px dashed var(--blue);
-    border-radius:16px;
-    padding:15px;
-    margin-top:10px;
-}
-.summary-box div{
-    display:flex;
-    justify-content:space-between;
-    font-weight:600;
-    margin:6px 0;
-}
-</style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg); color: var(--dark); min-height: 100vh; overflow-x: hidden; }
+
+        /* --- GEOMETRIC PARALLAX BACKGROUND --- */
+        .parallax-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; pointer-events: none; background: linear-gradient(135deg, #ffffff 0%, #f7fdf9 100%); }
+        .geo-shape { position: absolute; border: 2px solid var(--primary); opacity: 0.1; transition: 0.15s ease-out; }
+        .shape-1 { width: 120px; height: 120px; top: 10%; left: 5%; border-radius: 24px; transform: rotate(15deg); }
+        .shape-2 { width: 180px; height: 180px; bottom: 10%; right: 5%; border-radius: 50%; border-width: 5px; }
+        .shape-3 { width: 60px; height: 60px; top: 40%; right: 15%; transform: rotate(-20deg); border-width: 10px; }
+        .glow-ball { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(0, 135, 48, 0.08) 0%, transparent 70%); border-radius: 50%; filter: blur(60px); }
+
+        .container { max-width: 1600px; margin: 0 auto; padding: 30px; position: relative; }
+        
+        /* --- HEADER --- */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--card-bg); padding: 20px 40px; border-radius: 24px;
+            border: 1px solid var(--border); backdrop-filter: blur(20px); margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 135, 48, 0.05);
+        }
+
+        /* --- PROPERTY CIRCLE GRID --- */
+        .property-analytics { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .property-circle-card { 
+            background: #fff; padding: 25px; border-radius: 35px; border: 1px solid var(--border);
+            text-align: center; transition: 0.4s; position: relative;
+        }
+        .property-circle-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0, 135, 48, 0.1); }
+        .chart-box { width: 150px; height: 150px; margin: 0 auto 15px; position: relative; }
+
+        /* --- DASHBOARD GRID --- */
+        .dashboard-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 25px; }
+        .card { 
+            background: var(--card-bg); padding: 30px; border-radius: 35px; border: 1px solid var(--border); 
+            backdrop-filter: blur(15px); margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        }
+        
+        h3 { font-weight: 800; font-size: 1.1rem; margin-bottom: 20px; color: #334155; display: flex; align-items: center; gap: 10px; }
+        h3 i { color: var(--primary); }
+
+        /* --- TABLES --- */
+        .table-container { overflow-x: auto; border-radius: 25px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { text-align: left; padding: 15px; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--primary-light); }
+        td { padding: 18px 15px; border-bottom: 1px solid var(--primary-light); font-size: 0.9rem; }
+        
+        /* --- LIVE TIMER UI --- */
+        .timer-unit { font-family: monospace; font-weight: 800; color: var(--primary); background: var(--primary-light); padding: 5px 12px; border-radius: 10px; font-size: 0.9rem; border: 1px solid rgba(0,135,48,0.1); }
+        .overdue-row td { background: var(--error-light) !important; }
+        .overdue-row .timer-unit { background: #fee2e2; color: var(--error); border-color: #ffd8d8; animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 50% { opacity: 0.6; } }
+
+        /* --- OVERLAY POPUPS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .super-popup { 
+            background: #fff; padding: 40px; border-radius: 40px; text-align: center; border: 3px solid var(--primary); 
+            box-shadow: 0 30px 60px rgba(0, 135, 48, 0.2); animation: ultraPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 450px; width: 90%;
+        }
+        @keyframes ultraPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* --- BUTTONS & INPUTS --- */
+        input, select, textarea { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--primary-light); background: #fff; margin-bottom: 15px; transition: 0.3s; font-size: 0.9rem; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px var(--primary-glow); }
+        button { 
+            width: 100%; padding: 18px; border-radius: 16px; border: none; 
+            background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background: var(--dark); transform: scale(1.02); }
+
+        .btn-reply { background: var(--dark); padding: 8px 15px; font-size: 0.75rem; width: auto; color: white; border-radius: 10px; cursor: pointer; }
+        .id-badge { background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 8px; font-family: monospace; font-weight: 700; }
+        .summary-box { background: var(--primary-light); border-radius: 20px; padding: 20px; margin-top: 15px; border: 1px dashed var(--primary); }
+    </style>
 </head>
-
 <body>
-<div class="container">
 
-<header>
-    <h2>PG-SYNC <b>OWNER</b></h2>
-    <a href="/logout" class="logout">Logout</a>
-</header>
+    <div class="parallax-wrapper">
+        <div class="glow-ball" id="mouseGlow"></div>
+        <div class="geo-shape shape-1" id="g1"></div>
+        <div class="geo-shape shape-2" id="g2"></div>
+        <div class="geo-shape shape-3" id="g3"></div>
+    </div>
 
-<div class="card-grid">
+    <div class="modal-overlay" id="statusModal">
+        <div class="super-popup">
+            <div id="modalIcon" style="font-size: 70px; margin-bottom: 20px;"></div>
+            <h2 id="modalTitle" style="font-weight: 900; letter-spacing: -1px; color: var(--dark);"></h2>
+            <p id="modalMsg" style="color: #64748b; margin-bottom: 30px; font-size: 1.1rem; line-height: 1.6;"></p>
+            <button onclick="document.getElementById('statusModal').style.display='none'">Resume Terminal</button>
+        </div>
+    </div>
 
-<!-- ================= RESIDENT PAYMENTS ================= -->
-<div class="card">
-<h3>Resident Payments</h3>
-<table>
-<thead>
-<tr>
-<th>Resident</th><th>Room</th><th>Bill</th>
-<th>Total</th><th>Paid</th><th>Due</th><th>Status</th><th>Action</th>
-</tr>
-</thead>
-<tbody>
-{% for p in payments %}
-<tr>
-<td>{{ p.resident }}</td>
-<td>{{ p.room_no }}</td>
-<td>{{ p.title }}</td>
-<td>₹ {{ "%.2f"|format(p.amount) }}</td>
-<td>₹ {{ "%.2f"|format(p.amount_paid or 0) }}</td>
-<td>₹ {{ "%.2f"|format(p.due) }}</td>
-<td>
-{% if p.due <= 0 %}
-<span class="status paid">PAID</span>
-{% elif p.amount_paid > 0 %}
-<span class="status pending" style="color:#ffc107">PARTIAL</span>
-{% else %}
-<span class="status pending">PENDING</span>
-{% endif %}
-</td>
-<td>
-{% if p.due > 0 %}
-<a href="/confirm-payment/{{ p.pay_id }}">Mark Paid</a>
-{% else %}
-✔
-{% endif %}
-</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
+    <div class="modal-overlay" id="replyOverlay">
+        <div class="super-popup">
+            <h2 style="font-weight: 900; color: var(--dark); margin-bottom: 10px;">TRANSMIT REPLY</h2>
+            <p id="replyTarget" style="color: var(--primary); font-weight: 600; margin-bottom: 20px;"></p>
+            <form id="replyForm" method="POST">
+                <textarea name="admin_reply" placeholder="Type your official response to the resident..." required style="height: 120px;"></textarea>
+                <button type="submit">Send Response</button>
+            </form>
+            <button onclick="document.getElementById('replyOverlay').style.display='none'" style="background: none; color: #94a3b8; margin-top: 10px; padding: 10px; border: none; cursor: pointer;">Dismiss</button>
+        </div>
+    </div>
 
-<!-- ================= ADD PROPERTY ================= -->
-<div class="card">
-<h3>Add Property</h3>
-<form method="POST" action="/add-property">
-<input name="property_name" placeholder="Property Name" required>
-<input name="address" placeholder="Address">
-<input name="phone" placeholder="Phone">
-<button>Add Property</button>
-</form>
-</div>
+    <div class="container">
+        <header>
+            <div>
+                <h2 style="font-weight: 800; color: var(--primary); letter-spacing: -1px;">PG SYNC <span style="color: var(--dark);">CONTROL</span></h2>
+                <p style="font-size: 0.7rem; color: #94a3b8; font-weight: 800; letter-spacing: 3px;">TERMINAL v9.5</p>
+            </div>
+            <a href="/logout" style="text-decoration: none; color: var(--error); font-weight: 800; font-size: 12px; border: 2px solid #fee2e2; padding: 10px 25px; border-radius: 15px;">TERMINATE SESSION</a>
+        </header>
 
-<!-- ================= ADD ROOM ================= -->
-<div class="card">
-<h3>Add Room</h3>
-<form method="POST" action="/add-room">
-<select name="property_id" required>
-<option value="">Select Property</option>
-{% for p in properties %}
-<option value="{{ p.id }}">{{ p.name }}</option>
-{% endfor %}
-</select>
-<input name="room_no" placeholder="Room No" required>
-<input name="capacity" type="number" placeholder="Capacity" required>
-<button>Add Room</button>
-</form>
-</div>
+        <h3 style="padding-left: 10px;"><i class="fa-solid fa-chart-pie"></i> Asset Health Logistics</h3>
+        <div class="property-analytics">
+            {% for prop in properties %}
+                <div class="property-circle-card">
+                    <div class="chart-box">
+                        <canvas id="chart-{{ prop.id }}"></canvas>
+                    </div>
+                    <h4 style="font-weight: 800; color: var(--dark);">{{ prop.name }}</h4>
+                    <p style="font-size: 0.75rem; color: #94a3b8;">{{ prop.address }}</p>
+                    <div style="margin-top: 10px; font-weight: 800; font-size: 0.8rem;">
+                        <span style="color: var(--primary);">{{ prop.profit_percent|default(0) }}% Paid</span> | 
+                        <span style="color: var(--error);">{{ prop.loss_percent|default(100) }}% Unpaid</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
 
-<!-- ================= ADD RESIDENT ================= -->
-<div class="card">
-<h3>Add Resident</h3>
-<form method="POST" action="/add-resident">
-<input name="resident_id" placeholder="Resident UID" required>
-<input name="email" type="email" placeholder="Email" required>
-<select name="property_id" required>
-<option value="">Select Property</option>
-{% for p in properties %}
-<option value="{{ p.id }}">{{ p.name }}</option>
-{% endfor %}
-</select>
-<select name="room_id" required>
-<option value="">Select Room</option>
-{% for r in rooms %}
-<option value="{{ r.id }}">{{ r.room_no }}</option>
-{% endfor %}
-</select>
-<button>Add Resident</button>
-</form>
-</div>
+        <div class="dashboard-grid">
+            <div class="content-left">
+                <div class="card" style="border-top: 6px solid var(--warning);">
+                    <h3><i class="fa-solid fa-envelope-open-text"></i> Resident Communication Hub</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Resident</th>
+                                    <th>Category</th>
+                                    <th>Message</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in complaints %}
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700;">{{ c.resident_name }}</div>
+                                        <span class="id-badge">Room {{ c.room_no }}</span>
+                                    </td>
+                                    <td><span style="text-transform: uppercase; font-size: 0.7rem; font-weight: 800; color: var(--primary);">{{ c.category }}</span></td>
+                                    <td style="max-width: 250px; font-size: 0.85rem; color: #64748b;">{{ c.message }}</td>
+                                    <td>
+                                        <button class="btn-reply" onclick="openReplyModal('{{ c.id }}', '{{ c.resident_name }}')">REPLY</button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">No pending resident messages.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-<!-- ================= ADD BILLS (ENHANCED) ================= -->
-<div class="card">
-<h3>Add Bills</h3>
+                <div class="card">
+                    <h3><i class="fa-solid fa-satellite-dish"></i> Live Resident Synchronization</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Resident Node</th>
+                                    <th>Asset Link</th>
+                                    <th>Sync Timer</th>
+                                    <th>Outstanding</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in payments %}
+                                <tr class="node-row">
+                                    <td>
+                                        <div style="font-weight: 700;">{{ p.resident }}</div>
+                                        <span class="id-badge">{{ p.resident_id }}</span>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;">Room {{ p.room_no }}</div>
+                                        <div style="font-size: 0.7rem; color: #94a3b8;">
+                                            {% for pr in properties %}{% if pr.id == p.property_id %}{{ pr.name }}{% endif %}{% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="timer-unit countdown" data-expire="{{ p.created_at.strftime('%Y-%m-%dT%H:%M:%S') if p.created_at else '' }}">00:00:00</div>
+                                    </td>
+                                    <td style="font-weight: 800; color: var(--dark);">₹ {{ "%.2f"|format(p.due) }}</td>
+                                    <td>
+                                        {% if p.due <= 0 %}
+                                            <span style="color: var(--primary); font-weight: 800;"><i class="fa-solid fa-circle-check"></i> SYNCED</span>
+                                        {% else %}
+                                            <span style="color: var(--warning); font-weight: 800;"><i class="fa-solid fa-spinner fa-spin"></i> PENDING</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-<form method="POST" action="/add-bills" id="billForm">
+            <div class="content-right">
+                <div class="card">
+                    <h3><i class="fa-solid fa-building-circle-plus"></i> Deploy Asset</h3>
+                    <form method="POST" action="/add-property">
+                        <input name="property_name" placeholder="Building Name" required>
+                        <input name="address" placeholder="Building Address" required>
+                        <input name="phone" placeholder="Emergency Phone">
+                        <button type="submit">Deploy Asset</button>
+                    </form>
+                </div>
 
-<h4>Common Bills</h4>
-{% set common = ['Rent','Electricity','Water','Maintenance'] %}
-{% for bill in common %}
-<input type="hidden" name="bills[{{ loop.index0 }}][title]" value="{{ bill }}">
-<input type="number" class="bill-amount"
-       name="bills[{{ loop.index0 }}][amount]"
-       placeholder="{{ bill }} Amount ₹"
-       oninput="recalc()" required>
-{% endfor %}
+                <div class="card">
+                    <h3><i class="fa-solid fa-key"></i> Init Room</h3>
+                    <form method="POST" action="/add-room">
+                        <select name="property_id" required>
+                            <option value="">Select Building Hub</option>
+                            {% for p in properties %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input name="room_no" placeholder="Room ID" required>
+                        <input name="capacity" type="number" placeholder="Resident Limit" required>
+                        <button type="submit">Activate Room</button>
+                    </form>
+                </div>
 
-<h4>Extra Bills</h4>
-<div id="extra-bills"></div>
+                <div class="card" style="border-top: 6px solid var(--primary);">
+                    <h3><i class="fa-solid fa-user-plus"></i> Invite Node</h3>
+                    <form method="POST" action="/add-resident">
+                        <input name="email" type="email" placeholder="Resident Email" required>
+                        <select name="property_id" required>
+                            <option value="">Target Property</option>
+                            {% for p in properties %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="room_id" required>
+                            <option value="">Assign Room</option>
+                            {% for r in rooms %}
+                            <option value="{{ r.id }}">
+                                {% for p in properties %}{% if p.id == r.property_id %}{{ p.name }}{% endif %}{% endfor %} - R{{ r.room_no }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">Authorize Node</button>
+                    </form>
+                </div>
 
-<button type="button" onclick="addExtraBill()">+ Add Extra Bill</button>
+                <div class="card">
+                    <h3><i class="fa-solid fa-calculator"></i> Smart Billing</h3>
+                    <form method="POST" action="/add-bills">
+                        <div id="dynamic-bills">
+                            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                                <input type="text" name="bill_names[]" value="Rent" required>
+                                <input type="number" class="bill-input" name="bill_amounts[]" oninput="calculateSplit()" placeholder="₹" required>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addNewRow()" style="background:var(--primary-light); color:var(--primary); margin-bottom:15px; font-size:0.7rem; width: auto; padding: 8px 15px; border-radius: 10px; border: none; cursor: pointer;">+ Add Parameter</button>
+                        
+                        <select name="room_id" id="roomSelector" onchange="calculateSplit()" required>
+                            <option value="" data-capacity="0">Select Room</option>
+                            {% for r in rooms %}
+                            <option value="{{ r.id }}" data-capacity="{{ r.capacity }}">
+                                {% for p in properties %}{% if p.id == r.property_id %}{{ p.name }}{% endif %}{% endfor %} - R{{ r.room_no }}
+                            </option>
+                            {% endfor %}
+                        </select>
 
-<h4>Property & Room</h4>
-<select name="property_id" required>
-<option value="">Select Property</option>
-{% for p in properties %}
-<option value="{{ p.id }}">{{ p.name }}</option>
-{% endfor %}
-</select>
+                        <div class="summary-box">
+                            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--primary); font-weight:800;">GROSS TOTAL <span id="displayTotal">₹ 0.00</span></div>
+                            <div style="display:flex; justify-content:space-between; font-weight:800; color:var(--dark); margin-top:10px; border-top:1px solid rgba(0,135,48,0.2); padding-top:10px;">PER NODE <span id="displaySplit">₹ 0.00</span></div>
+                        </div>
+                        <button type="submit" style="margin-top:20px;">Distribute Sync</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<select name="room_id" id="roomSelect" onchange="recalc()" required>
-<option value="">Select Room</option>
-{% for r in rooms %}
-<option value="{{ r.id }}" data-capacity="{{ r.capacity }}">
-Room {{ r.room_no }} ({{ r.capacity }} residents)
-</option>
-{% endfor %}
-</select>
+    <script>
+        // --- PARALLAX ---
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) / 30;
+            const moveY = (e.clientY - window.innerHeight / 2) / 30;
+            document.getElementById('mouseGlow').style.transform = `translate(${e.clientX - 300}px, ${e.clientY - 300}px)`;
+            document.getElementById('g1').style.transform = `translate(${moveX * 1.2}px, ${moveY * 1.2}px) rotate(15deg)`;
+            document.getElementById('g2').style.transform = `translate(${moveX * -1.8}px, ${moveY * -1.8}px)`;
+            document.getElementById('g3').style.transform = `translate(${moveX * 2.5}px, ${moveY * 2.5}px) rotate(-20deg)`;
+        });
 
-<!-- 🔥 NEW SUMMARY (NO FUNCTION LOST) -->
-<div class="summary-box">
-<div>Total Bill <span>₹ <span id="total">0.00</span></span></div>
-<div>Residents <span id="count">0</span></div>
-<div>Per Resident <span>₹ <span id="split">0.00</span></span></div>
-</div>
+        // --- REPLY SYSTEM ---
+        function openReplyModal(id, name) {
+            document.getElementById('replyTarget').innerText = "Replying to: " + name;
+            document.getElementById('replyForm').action = "/admin/reply-complaint/" + id;
+            document.getElementById('replyOverlay').style.display = 'flex';
+        }
 
-<button>Add & Split Bills</button>
-</form>
-</div>
+        // --- SMART CALCULATION ---
+        function calculateSplit() {
+            let total = 0;
+            document.querySelectorAll('.bill-input').forEach(i => total += parseFloat(i.value || 0));
+            const sel = document.getElementById('roomSelector');
+            const cap = parseInt(sel.options[sel.selectedIndex].dataset.capacity) || 1;
+            document.getElementById('displayTotal').innerText = `₹ ${total.toFixed(2)}`;
+            document.getElementById('displaySplit').innerText = `₹ ${(total / cap).toFixed(2)}`;
+        }
 
-</div>
-</div>
+        function addNewRow() {
+            const div = document.createElement('div');
+            div.style.display = "flex"; div.style.gap = "10px"; div.style.marginBottom = "10px";
+            div.innerHTML = `<input type="text" name="bill_names[]" placeholder="Item" required><input type="number" class="bill-input" name="bill_amounts[]" oninput="calculateSplit()" placeholder="₹" required>`;
+            document.getElementById('dynamic-bills').appendChild(div);
+        }
 
-<script>
-let extraCount = {{ common|length }};
+        // --- TIMERS ---
+        function updateTimers() {
+            document.querySelectorAll('.countdown').forEach(timer => {
+                const ts = timer.dataset.expire;
+                if (!ts) return;
+                const expiry = new Date(new Date(ts).getTime() + (7 * 24 * 60 * 60 * 1000));
+                const dist = expiry - new Date();
+                if (dist < 0) {
+                    timer.innerHTML = "EXPIRED";
+                    timer.closest('tr').classList.add('overdue-row');
+                } else {
+                    const d = Math.floor(dist / 86400000);
+                    const h = Math.floor((dist % 86400000) / 3600000);
+                    const m = Math.floor((dist % 3600000) / 60000);
+                    const s = Math.floor((dist % 60000) / 1000);
+                    timer.innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+                }
+            });
+        }
+        setInterval(updateTimers, 1000);
 
-function addExtraBill(){
-    document.getElementById('extra-bills').insertAdjacentHTML('beforeend',`
-    <div class="extra-bill">
-        <input name="bills[${extraCount}][title]" placeholder="Bill Title" required>
-        <input type="number" class="bill-amount"
-               name="bills[${extraCount}][amount]"
-               placeholder="Amount ₹"
-               oninput="recalc()" required>
-    </div>`);
-    extraCount++;
-}
+        // --- CHARTS ---
+        {% for prop in properties %}
+        new Chart(document.getElementById('chart-{{ prop.id }}').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Paid', 'Loss'],
+                datasets: [{
+                    data: [{{ prop.profit_percent|default(0) }}, {{ prop.loss_percent|default(100) }}],
+                    backgroundColor: ['#008730', '#ff4757'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '80%', plugins: { legend: false } }
+        });
+        {% endfor %}
 
-function recalc(){
-    let total = 0;
-    document.querySelectorAll('.bill-amount').forEach(i=>{
-        total += parseFloat(i.value || 0);
-    });
-    document.getElementById('total').innerText = total.toFixed(2);
-
-    const room = document.getElementById('roomSelect');
-    const count = room.selectedOptions[0]?.dataset.capacity || 0;
-    document.getElementById('count').innerText = count;
-
-    document.getElementById('split').innerText =
-        count > 0 ? (total / count).toFixed(2) : '0.00';
-}
-</script>
-
+        // --- FLASH LOAD ---
+        window.onload = function() {
+            updateTimers();
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    const modal = document.getElementById('statusModal');
+                    const modalTitle = document.getElementById('modalTitle');
+                    const modalIcon = document.getElementById('modalIcon');
+                    const modalMsg = document.getElementById('modalMsg');
+                    modal.style.display = 'flex';
+                    {% for category, message in messages %}
+                        modalMsg.innerText = "{{ message }}";
+                        {% if category == 'success' %}
+                            modalTitle.innerText = "ACTION SUCCESS";
+                            modalIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                            modalIcon.style.color = "var(--primary)";
+                        {% else %}
+                            modalTitle.innerText = "SYSTEM ERROR";
+                            modalIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                            modalIcon.style.color = "var(--error)";
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        };
+    </script>
 </body>
 </html>

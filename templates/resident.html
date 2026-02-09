@@ -1,221 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Resident Dashboard | PG-Sync</title>
+    <meta charset="UTF-8">
+    <title>Resident Terminal | PG Sync Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary: #008730; --primary-glow: rgba(0, 135, 48, 0.4); --primary-light: #e6f4ea;
+            --error: #ff4757; --warning: #ffa502; --dark: #0f172a; --bg: #f8fafc;
+            --border: rgba(0, 135, 48, 0.15); --glass: rgba(255, 255, 255, 0.7);
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background: var(--bg); color: var(--dark); min-height: 100vh; overflow-x: hidden; }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-font-family:'Poppins',sans-serif;
-background:linear-gradient(135deg,#0a0a23,#1a1a2e,#16213e);
-color:white;
-min-height:100vh;
-padding:20px
-}
-.dashboard-container{max-width:1200px;margin:auto}
-.dashboard-header{
-background:rgba(255,255,255,.05);
-padding:40px;
-border-radius:25px;
-text-align:center;
-margin-bottom:40px;
-position:relative
-}
-.dashboard-title{
-font-size:2.5rem;
-font-weight:700;
-background:linear-gradient(135deg,#00d4ff,#fff);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent
-}
-.logout{
-position:absolute;
-top:30px;
-right:30px;
-color:#ff6b6b;
-text-decoration:none
-}
-.due-card{
-background:linear-gradient(135deg,rgba(255,193,7,.2),rgba(255,152,0,.2));
-border:2px solid rgba(255,193,7,.4);
-padding:30px;
-border-radius:20px;
-text-align:center;
-margin-bottom:40px
-}
-.due-amount{font-size:3rem;color:#ffc107;font-weight:700}
-.section-card{
-background:rgba(255,255,255,.03);
-border-radius:20px;
-margin-bottom:30px;
-overflow:hidden
-}
-.section-header{
-background:rgba(255,255,255,.06);
-padding:20px;
-display:flex;
-align-items:center;
-gap:10px
-}
-.custom-table{
-width:100%;
-border-collapse:collapse
-}
-.custom-table th{
-background:rgba(0,212,255,.1);
-padding:15px;
-font-size:.8rem
-}
-.custom-table td{
-padding:15px;
-border-bottom:1px solid rgba(255,255,255,.05);
-text-align:center
-}
-.badge-pending{
-background:#ffc107;
-color:black;
-padding:5px 15px;
-border-radius:20px;
-font-weight:600
-}
-.pay-btn{
-background:linear-gradient(135deg,#28a745,#20c997);
-color:white;
-padding:8px 18px;
-border-radius:25px;
-text-decoration:none;
-font-weight:600
-}
-.reason-input{
-background:rgba(255,255,255,.1);
-border:1px solid rgba(255,255,255,.2);
-color:white;
-padding:6px;
-border-radius:10px
-}
-.complaint-textarea{
-width:100%;
-padding:15px;
-border-radius:15px;
-background:rgba(255,255,255,.05);
-border:1px solid rgba(255,255,255,.1);
-color:white
-}
-.complaint-submit{
-margin-top:10px;
-width:100%;
-padding:15px;
-border:none;
-border-radius:15px;
-background:#00d4ff;
-font-weight:700;
-cursor:pointer
-}
-</style>
+        /* --- HYPER PARALLAX ENGINE --- */
+        .parallax-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; background: radial-gradient(circle at top right, #f7fdf9, #ffffff); }
+        .geo-shape { position: absolute; border: 2px solid var(--primary); opacity: 0.1; transition: transform 0.2s cubic-bezier(0.1, 0.7, 0.1, 1); pointer-events: none; }
+        .shape-1 { width: 300px; height: 300px; top: -50px; left: -50px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; background: var(--primary-glow); filter: blur(40px); }
+        .shape-2 { width: 150px; height: 150px; bottom: 10%; right: 10%; border-radius: 50%; border-width: 15px; }
+        .shape-3 { width: 80px; height: 80px; top: 40%; right: 20%; transform: rotate(45deg); border-width: 10px; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px; position: relative; animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--glass); padding: 20px 40px; border-radius: 24px; 
+            border: 1px solid var(--border); backdrop-filter: blur(20px); 
+            margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .due-hero { 
+            background: linear-gradient(135deg, #ffffff, #f1fdf5); padding: 50px; 
+            border-radius: 40px; border: 1px solid var(--border); text-align: center; 
+            margin-bottom: 40px; position: relative; overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 135, 48, 0.1);
+        }
+        .due-amount { font-size: 4.5rem; font-weight: 800; color: var(--primary); letter-spacing: -3px; }
+
+        /* --- DYNAMIC TIMER & COMPLAINT STYLES --- */
+        .timer-node { font-family: monospace; font-weight: 800; font-size: 0.85rem; padding: 6px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; transition: 0.5s; }
+        .t-safe { background: #dcfce7; color: #15803d; }
+        .t-warn { background: #fef3c7; color: #b45309; }
+        .t-critical { background: #fee2e2; color: #b91c1c; animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.5; } }
+        
+        .complaint-btn { background: #f1f5f9; color: var(--error); border: 1px solid #fee2e2; padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; text-align: center; }
+        .complaint-btn:hover { background: var(--error); color: white; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 30px; }
+        .card { background: var(--glass); padding: 35px; border-radius: 35px; border: 1px solid var(--border); backdrop-filter: blur(15px); margin-bottom: 30px; transition: 0.4s; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        td { padding: 20px 15px; background: #ffffff; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        td:first-child { border-radius: 15px 0 0 15px; }
+        td:last-child { border-radius: 0 15px 15px 0; }
+
+        .pay-btn { background: linear-gradient(135deg, var(--primary), #00a83e); color: #fff; padding: 12px 24px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px var(--primary-glow); }
+
+        /* --- OVERLAY MODALS --- */
+        .full-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(12px); }
+        .modal-card { background: white; padding: 45px; border-radius: 45px; text-align: center; max-width: 440px; width: 95%; border: 2px solid var(--primary); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; margin-bottom: 15px; font-weight: 600; resize: none; font-size: 0.9rem; }
+        select { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; margin-bottom: 15px; font-weight: 600; }
+    </style>
 </head>
-
 <body>
-<div class="dashboard-container">
+    <div class="parallax-wrapper">
+        <div class="geo-shape shape-1" id="s1"></div>
+        <div class="geo-shape shape-2" id="s2"></div>
+        <div class="geo-shape shape-3" id="s3"></div>
+    </div>
 
-<div class="dashboard-header">
-<h1 class="dashboard-title">Resident Dashboard</h1>
-<a href="/logout" class="logout"><i class="bi bi-power"></i> Logout</a>
-</div>
+    <div id="syncOverlay" class="full-overlay">
+        <div class="modal-card">
+            <h2 style="font-weight: 800; color: var(--dark);">BANK GATEWAY</h2>
+            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 25px;">Verify sync with Ref No / UTR</p>
+            <img id="qrImage" src="" style="width: 220px; height: 220px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #eee;">
+            <div id="qrAmount" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); margin-bottom: 10px;"></div>
+            <form id="verifyForm" method="POST">
+                <input type="text" name="utr_id" style="width:100%; padding:15px; border-radius:15px; border:2px solid #eee; text-align:center; font-weight:800; letter-spacing:3px; margin-bottom:15px;" placeholder="12-DIGIT UTR" required maxlength="12">
+                <button type="submit" class="pay-btn" style="width: 100%; height: 60px;">VALIDATE & SYNC</button>
+            </form>
+            <button onclick="closeModal('syncOverlay')" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-weight: 700;">CANCEL</button>
+        </div>
+    </div>
 
-<div class="due-card">
-<div class="due-amount">₹
-{% set total = namespace(val=0) %}
-{% for p in payments %}
-{% if p.status == 'pending' %}
-{% set total.val = total.val + p.amount %}
-{% endif %}
-{% endfor %}
-{{ "%.2f"|format(total.val) }}
-</div>
-<div>Total Outstanding</div>
-</div>
+    <div id="reasonOverlay" class="full-overlay">
+        <div class="modal-card" style="border-color: var(--error);">
+            <h2 style="color: var(--error); font-weight: 800;">LATE REASON LOG</h2>
+            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">Balance will roll to next month upon Admin approval. Submit your justification.</p>
+            <form id="reasonForm" method="POST">
+                <textarea name="reason_text" placeholder="Why is the sync delayed? (e.g., Salary delayed, App issue)" required></textarea>
+                <button type="submit" class="pay-btn" style="background: var(--dark); width: 100%;">SUBMIT TO ADMIN</button>
+            </form>
+            <button onclick="closeModal('reasonOverlay')" style="margin-top: 15px; border: none; background: none; color: #94a3b8;">CLOSE</button>
+        </div>
+    </div>
 
-<div class="section-card">
-<div class="section-header">
-<i class="bi bi-clock-history"></i>
-<h3>Pending Bills</h3>
-</div>
+    <div class="container">
+        <header>
+            <h2 style="font-weight: 800; color: var(--primary);">RESIDENT <span style="color:var(--dark)">TERMINAL</span></h2>
+            <a href="/logout" style="text-decoration:none; color:var(--error); font-weight:800; border: 2px solid #fee2e2; padding: 10px 20px; border-radius: 15px;">LOGOUT</a>
+        </header>
 
-<table class="custom-table">
-<thead>
-<tr>
-<th>Bill</th>
-<th>Amount</th>
-<th>Status</th>
-<th>Reason</th>
-<th>Action</th>
-</tr>
-</thead>
-<tbody>
-{% for p in payments if p.status=='pending' %}
-<tr>
-<td>{{ p.title }}<br><small>{{ p.bill_date }}</small></td>
-<td>₹{{ p.amount }}</td>
-<td><span class="badge-pending">PENDING</span></td>
-<td>
-<form method="POST">
-<input type="hidden" name="payment_id" value="{{ p.payment_id }}">
-<input name="reason" value="{{ p.reason or '' }}" class="reason-input">
-<button type="submit" style="background:none;border:none;color:#00d4ff">
-<i class="bi bi-check-circle"></i>
-</button>
-</form>
-</td>
-<td>
-<a href="{{ url_for('pay_bill', pay_id=p.pay_id) }}" class="pay-btn">Pay</a>
+        <div class="due-hero">
+            <p style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">Pending Network Balance</p>
+            <div class="due-amount">₹ 
+                {% set total_due = namespace(val=0) %}
+                {% for p in payments if p.status == 'pending' %}{% set total_due.val = total_due.val + p.amount %}{% endfor %}
+                {{ "%.2f"|format(total_due.val) }}
+            </div>
+        </div>
 
-</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
+        <div class="dashboard-grid">
+            <div class="content-left">
+                <div class="card" style="border-left: 8px solid var(--primary); background: #f0fdf4;">
+                    <h3><i class="bi bi-chat-square-dots-fill"></i> Management Feedback</h3>
+                    <div style="margin-top: 15px;">
+                        {% for c in my_complaints %}
+                            {% if c.admin_reply %}
+                            <div style="background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; border: 1px solid var(--border);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                                    <span style="font-size: 0.7rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">RE: {{ c.category }}</span>
+                                    <span style="font-size: 0.65rem; color: #94a3b8;">{{ c.created_at.strftime('%d %b') if c.created_at else '' }}</span>
+                                </div>
+                                <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;"><b>You wrote:</b> {{ c.message }}</p>
+                                <div style="background: var(--primary-light); padding: 12px; border-radius: 10px; border-left: 4px solid var(--primary);">
+                                    <p style="font-size: 0.9rem; font-weight: 700; color: var(--dark);"><i class="bi bi-reply-fill"></i> {{ c.admin_reply }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <p style="font-size: 0.85rem; color: #94a3b8; font-style: italic;">No active replies from management.</p>
+                        {% endfor %}
+                    </div>
+                </div>
 
-<div class="section-card" style="padding:25px">
-<h3><i class="bi bi-chat-dots"></i> Complaint</h3>
-<form method="POST" action="/complaint">
-<textarea name="complaint" class="complaint-textarea" required></textarea>
-<button class="complaint-submit">Submit</button>
-</form>
-</div>
+                <div class="card">
+                    <h3><i class="bi bi-lightning-charge-fill"></i> Sync Stream</h3>
+                    <table>
+                        <thead><tr><th>Details</th><th>Deadline / Status</th><th>Value</th><th>Action</th></tr></thead>
+                        <tbody>
+                            {% for p in payments %}
+                            <tr>
+                                <td><b>{{ p.title }}</b><br><small style="color:#94a3b8">{{ p.month }}</small></td>
+                                <td>
+                                    {% if p.status == 'paid' %}
+                                        <div style="color: var(--primary); font-weight: 800; font-size: 0.85rem;"><i class="bi bi-patch-check-fill"></i> SYNCED: {{ p.created_at.strftime('%d %b') }}</div>
+                                    {% else %}
+                                        <div class="timer-node countdown" data-expire="{{ p.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}" id="timer-{{ p.pay_id }}">Initializing...</div>
+                                        <button id="comp-btn-{{ p.pay_id }}" onclick="openReasonPortal('{{ p.pay_id }}')" class="complaint-btn" style="display:none; margin-top: 8px;">
+                                            <i class="bi bi-exclamation-triangle"></i> SUBMIT LATE REASON
+                                        </button>
+                                    {% endif %}
+                                </td>
+                                <td style="font-weight: 800;">₹ {{ p.amount }}</td>
+                                <td>
+                                    {% if p.status == 'pending' %}
+                                        <button id="pay-btn-{{ p.pay_id }}" onclick="openSyncTerminal('{{ p.amount }}', 'Rent', '{{ p.pay_id }}', true)" class="pay-btn">SYNC</button>
+                                    {% else %}
+                                        <div style="color: var(--primary); font-weight: 800;"><i class="bi bi-check-all"></i> VERIFIED</div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-<div class="section-card">
-<div class="section-header">
-<i class="bi bi-check-circle"></i>
-<h3>Payment History</h3>
-</div>
+                <div class="card" style="border-top: 6px solid var(--dark);">
+                    <h3><i class="bi bi-people-fill"></i> Room Hub Ledger</h3>
+                    {% if private_splits %}
+                        {% for s in private_splits %}
+                        <div style="margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div><h4 style="color: var(--primary);">{{ s.title }}</h4><small>Request by {{ s.resident_name }}</small></div>
+                                <div style="font-size: 1.6rem; font-weight: 800;">₹ {{ "%.2f"|format(s.amount_per_person) }}</div>
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                                {% for member in s.full_ledger %}
+                                    <div style="background: #fff; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-weight: 700; font-size: 0.8rem;">{{ member.name }}</span>
+                                        {% if member.is_paid %}<i class="bi bi-check-circle-fill" style="color: var(--primary);"></i>{% else %}<i class="bi bi-circle" style="color: #cbd5e1;"></i>{% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if not s.user_has_paid %}
+                                <button onclick="openSyncTerminal('{{ s.amount_per_person }}', 'Split', '{{ s.id }}', false)" class="pay-btn" style="background: var(--dark); width: 100%;">PAY SHARE</button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
 
-<table class="custom-table">
-<thead>
-<tr>
-<th>Bill</th>
-<th>Amount</th>
-<th>Status</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-{% for p in payments if p.status=='paid' %}
-<tr>
-<td>{{ p.title }}</td>
-<td>₹{{ p.amount }}</td>
-<td style="color:#28a745">PAID</td>
-<td>{{ p.bill_date }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
+            <div class="content-right">
+                <div class="card" style="border: 2px solid var(--primary);">
+                    <h3>Broadcast Split</h3>
+                    <form action="/broadcast-private-split" method="POST">
+                        <input type="text" name="title" placeholder="Description" required style="width:100%; padding:15px; border-radius:15px; border: 1px solid #f1f5f9; margin-bottom: 12px;">
+                        <input type="number" id="split-total" oninput="autoCalc()" placeholder="Total ₹" required style="width:100%; padding:15px; border-radius:15px; border: 1px solid #f1f5f9; margin-bottom: 12px;">
+                        <input type="hidden" name="amount" id="final-split-val">
+                        <div id="split-result" style="text-align: center; padding: 25px; background: var(--primary-light); border-radius: 20px; font-weight: 800; color: var(--primary); font-size: 2rem;">₹ 0.00</div>
+                        <button type="submit" style="width: 100%; margin-top: 20px; background: var(--dark);" class="pay-btn">SEND TO ROOM</button>
+                    </form>
+                </div>
 
-</div>
+                <div class="card" style="border-top: 6px solid var(--error);">
+                    <h3><i class="bi bi-megaphone-fill"></i> Help & Support</h3>
+                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">Report maintenance issues or billing discrepancies.</p>
+                    <form action="/submit-complaint" method="POST">
+                        <select name="category" required>
+                            <option value="maintenance">Maintenance / Repair</option>
+                            <option value="billing">Billing Error</option>
+                            <option value="amenities">WiFi / Water / Electricity</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <textarea name="complaint_msg" placeholder="Describe your issue in detail..." required></textarea>
+                        <button type="submit" class="pay-btn" style="background: var(--error); width: 100%;">RAISE TICKET</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MY_UPI = "jiachinnu999@oksbi";
+        const DEADLINE_DAYS = 7;
+
+        // --- THE REAL LIVE CLOCK TIMER ENGINE ---
+        function updateTimers() {
+            document.querySelectorAll('.countdown').forEach(timer => {
+                const createdDate = new Date(timer.dataset.expire);
+                const deadline = new Date(createdDate.getTime() + (DEADLINE_DAYS * 24 * 60 * 60 * 1000));
+                const now = new Date();
+                const diff = deadline - now;
+                const payId = timer.id.split('-')[1];
+                const payBtn = document.getElementById('pay-btn-' + payId);
+                const compBtn = document.getElementById('comp-btn-' + payId);
+
+                if (diff <= 0) {
+                    timer.innerHTML = "<i class='bi bi-clock-history'></i> OVERDUE";
+                    timer.className = "timer-node t-critical";
+                    if(payBtn) payBtn.style.display = 'none';
+                    if(compBtn) compBtn.style.display = 'block';
+                    return;
+                }
+
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+
+                timer.innerHTML = `<i class='bi bi-hourglass-split'></i> ${d}d ${h}h ${m}m ${s}s`;
+                
+                if (d < 1) timer.className = "timer-node t-critical";
+                else if (d < 3) timer.className = "timer-node t-warn";
+                else timer.className = "timer-node t-safe";
+            });
+        }
+        setInterval(updateTimers, 1000);
+        updateTimers();
+
+        // Overlay Controls
+        function openSyncTerminal(amt, note, id, isOff) {
+            const upiUrl = `upi://pay?pa=${MY_UPI}&pn=PG_SYNC&am=${amt}&tn=${encodeURIComponent(note)}&cu=INR`;
+            window.location.href = upiUrl;
+            document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+            document.getElementById('qrAmount').innerText = `₹ ${amt}`;
+            document.getElementById('verifyForm').action = `/verify-transaction/${isOff ? 1 : 2}/${id}`;
+            document.getElementById('syncOverlay').style.display = 'flex';
+        }
+
+        function openReasonPortal(id) {
+            document.getElementById('reasonForm').action = `/submit-late-reason/${id}`;
+            document.getElementById('reasonOverlay').style.display = 'flex';
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // Parallax Effect
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.pageX) / 25;
+            const y = (window.innerHeight / 2 - e.pageY) / 25;
+            document.getElementById('s1').style.transform = `translate(${x}px, ${y}px)`;
+            document.getElementById('s2').style.transform = `translate(${-x}px, ${-y}px)`;
+        });
+
+        function autoCalc() {
+            const total = document.getElementById('split-total').value;
+            const count = {{ resident_count|default(1) }};
+            const res = total > 0 ? (total / count).toFixed(2) : "0.00";
+            document.getElementById('split-result').innerText = `₹ ${res}`;
+            document.getElementById('final-split-val').value = res;
+        }
+    </script>
 </body>
 </html>
