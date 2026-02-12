@@ -36,7 +36,6 @@
 
         .container { max-width: 1600px; margin: 0 auto; padding: 30px; position: relative; }
         
-        /* --- HEADER --- */
         header { 
             display: flex; justify-content: space-between; align-items: center; 
             background: var(--card-bg); padding: 20px 40px; border-radius: 24px;
@@ -44,7 +43,6 @@
             box-shadow: 0 10px 40px rgba(0, 135, 48, 0.05);
         }
 
-        /* --- PROPERTY CIRCLE GRID --- */
         .property-analytics { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .property-circle-card { 
             background: #fff; padding: 25px; border-radius: 35px; border: 1px solid var(--border);
@@ -53,7 +51,6 @@
         .property-circle-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0, 135, 48, 0.1); }
         .chart-box { width: 150px; height: 150px; margin: 0 auto 15px; position: relative; }
 
-        /* --- DASHBOARD GRID --- */
         .dashboard-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 25px; }
         .card { 
             background: var(--card-bg); padding: 30px; border-radius: 35px; border: 1px solid var(--border); 
@@ -63,39 +60,34 @@
         h3 { font-weight: 800; font-size: 1.1rem; margin-bottom: 20px; color: #334155; display: flex; align-items: center; gap: 10px; }
         h3 i { color: var(--primary); }
 
-        /* --- TABLES --- */
         .table-container { overflow-x: auto; border-radius: 25px; border: 1px solid var(--border); }
         table { width: 100%; border-collapse: collapse; background: white; }
         th { text-align: left; padding: 15px; color: #64748b; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--primary-light); }
         td { padding: 18px 15px; border-bottom: 1px solid var(--primary-light); font-size: 0.9rem; }
         
-        /* --- LIVE TIMER UI --- */
         .timer-unit { font-family: monospace; font-weight: 800; color: var(--primary); background: var(--primary-light); padding: 5px 12px; border-radius: 10px; font-size: 0.9rem; border: 1px solid rgba(0,135,48,0.1); }
         .overdue-row td { background: var(--error-light) !important; }
-        .overdue-row .timer-unit { background: #fee2e2; color: var(--error); border-color: #ffd8d8; animation: pulseRed 2s infinite; }
-        @keyframes pulseRed { 50% { opacity: 0.6; } }
 
-        /* --- OVERLAY POPUPS --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); display: none; justify-content: center; align-items: center; z-index: 9999; }
         .super-popup { 
             background: #fff; padding: 40px; border-radius: 40px; text-align: center; border: 3px solid var(--primary); 
             box-shadow: 0 30px 60px rgba(0, 135, 48, 0.2); animation: ultraPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             max-width: 450px; width: 90%;
         }
-        @keyframes ultraPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* --- BUTTONS & INPUTS --- */
         input, select, textarea { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--primary-light); background: #fff; margin-bottom: 15px; transition: 0.3s; font-size: 0.9rem; }
-        input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 10px var(--primary-glow); }
-        button { 
-            width: 100%; padding: 18px; border-radius: 16px; border: none; 
-            background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; transition: 0.3s;
-        }
+        button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--primary); color: #fff; font-weight: 700; cursor: pointer; transition: 0.3s; }
         button:hover { background: var(--dark); transform: scale(1.02); }
 
         .btn-reply { background: var(--dark); padding: 8px 15px; font-size: 0.75rem; width: auto; color: white; border-radius: 10px; cursor: pointer; }
         .id-badge { background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 8px; font-family: monospace; font-weight: 700; }
         .summary-box { background: var(--primary-light); border-radius: 20px; padding: 20px; margin-top: 15px; border: 1px dashed var(--primary); }
+
+        /* --- CHAT HISTORY STYLES --- */
+        .chat-scroll { max-height: 120px; overflow-y: auto; background: #f8fafc; padding: 10px; border-radius: 12px; margin-top: 5px; border: 1px solid #eee; }
+        .chat-bubble { margin-bottom: 6px; padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; line-height: 1.3; }
+        .chat-bubble.owner { background: var(--primary-light); color: var(--primary); border-left: 3px solid var(--primary); }
+        .chat-bubble.resident { background: white; color: #64748b; border-left: 3px solid #cbd5e1; }
     </style>
 </head>
 <body>
@@ -121,7 +113,7 @@
             <h2 style="font-weight: 900; color: var(--dark); margin-bottom: 10px;">TRANSMIT REPLY</h2>
             <p id="replyTarget" style="color: var(--primary); font-weight: 600; margin-bottom: 20px;"></p>
             <form id="replyForm" method="POST">
-                <textarea name="admin_reply" placeholder="Type your official response to the resident..." required style="height: 120px;"></textarea>
+                <textarea name="admin_reply" placeholder="Type your official response..." required style="height: 120px;"></textarea>
                 <button type="submit">Send Response</button>
             </form>
             <button onclick="document.getElementById('replyOverlay').style.display='none'" style="background: none; color: #94a3b8; margin-top: 10px; padding: 10px; border: none; cursor: pointer;">Dismiss</button>
@@ -157,14 +149,14 @@
         <div class="dashboard-grid">
             <div class="content-left">
                 <div class="card" style="border-top: 6px solid var(--warning);">
-                    <h3><i class="fa-solid fa-envelope-open-text"></i> Resident Communication Hub</h3>
+                    <h3><i class="fa-solid fa-envelope-open-text"></i> Resident Chat Terminal</h3>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Resident</th>
                                     <th>Category</th>
-                                    <th>Message</th>
+                                    <th>Conversation History</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -176,7 +168,17 @@
                                         <span class="id-badge">Room {{ c.room_no }}</span>
                                     </td>
                                     <td><span style="text-transform: uppercase; font-size: 0.7rem; font-weight: 800; color: var(--primary);">{{ c.category }}</span></td>
-                                    <td style="max-width: 250px; font-size: 0.85rem; color: #64748b;">{{ c.message }}</td>
+                                    <td style="max-width: 300px;">
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 5px;"><b>Issue:</b> {{ c.message }}</div>
+                                        <div class="chat-scroll">
+                                            {% for chat in c.chat_history %}
+                                            <div class="chat-bubble {{ chat.sender_role }}">
+                                                <span style="font-weight: 800; font-size: 0.6rem;">{{ chat.sender_role|upper }}</span>
+                                                <p>{{ chat.message }}</p>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
                                     <td>
                                         <button class="btn-reply" onclick="openReplyModal('{{ c.id }}', '{{ c.resident_name }}')">REPLY</button>
                                     </td>
@@ -218,9 +220,9 @@
                                     <td>
                                         <div class="timer-unit countdown" data-expire="{{ p.created_at.strftime('%Y-%m-%dT%H:%M:%S') if p.created_at else '' }}">00:00:00</div>
                                     </td>
-                                    <td style="font-weight: 800; color: var(--dark);">₹ {{ "%.2f"|format(p.due) }}</td>
+                                    <td style="font-weight: 800; color: var(--dark);">₹ {{ "%.2f"|format(p.due|default(0)) }}</td>
                                     <td>
-                                        {% if p.due <= 0 %}
+                                        {% if p.due|default(0) <= 0 %}
                                             <span style="color: var(--primary); font-weight: 800;"><i class="fa-solid fa-circle-check"></i> SYNCED</span>
                                         {% else %}
                                             <span style="color: var(--warning); font-weight: 800;"><i class="fa-solid fa-spinner fa-spin"></i> PENDING</span>

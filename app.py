@@ -5,7 +5,6 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "pg_sync_secure"
 
-# ---------------- DATABASE ----------------
 def get_db():
     return mysql.connector.connect(
         host="localhost",
@@ -15,12 +14,12 @@ def get_db():
         autocommit=True
     )
 
-# ---------------- LANDING ----------------
+
 @app.route("/")
 def landing():
     return render_template("landing.html")
 
-# ---------------- LOGIN (Refined for Hub Popup) ----------------
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -32,34 +31,35 @@ def signup():
         db = get_db()
         cur = db.cursor(dictionary=True)
 
-        # 1. Prevent duplicate email in users table
+
         cur.execute("SELECT id FROM users WHERE email=%s", (email,))
         if cur.fetchone():
-            flash("Terminal Error: Email already registered.", "error")
+            flash("Terminal Error: Account already exists for this email.", "error")
             return redirect(url_for("signup"))
 
-        # 2. Resident Verification: Force-check for existing profile
         resident_db_id = None
         if role == "resident":
-            # The owner MUST have added this email to the 'residents' table first
-            cur.execute("SELECT id FROM residents WHERE email=%s AND user_id IS NULL", (email,))
+            cur.execute("""
+                SELECT id FROM residents 
+                WHERE email=%s AND user_id IS NULL 
+                ORDER BY id DESC LIMIT 1
+            """, (email,))
             resident_record = cur.fetchone()
             
             if not resident_record:
-                # Triggers the Red Sync Error Popup in the Maya UI
-                flash("Sync Error: No pre-created profile found for this email. Contact Owner.", "error")
+                flash("Sync Error: No pending profile found. Contact your PG owner.", "error")
                 return redirect(url_for("signup"))
             
             resident_db_id = resident_record["id"]
 
-        # 3. Create the User Account
+        
         cur.execute("""
             INSERT INTO users (name, email, password, role)
             VALUES (%s, %s, %s, %s)
         """, (name, email, password, role))
         new_user_id = cur.lastrowid
 
-        # 4. Critical Step: Bridge the user_id to the resident record
+
         if role == "resident" and resident_db_id:
             cur.execute("""
                 UPDATE residents 
@@ -67,12 +67,11 @@ def signup():
                 WHERE id=%s
             """, (new_user_id, resident_db_id))
 
-        flash("Hub Account Created Successfully! Access Granted.", "success")
+        flash("Hub Account Created Successfully! Syncing Terminal...", "success")
         return redirect(url_for("login"))
 
     return render_template("signup.html")
 
-# ---------------- LOGIN (Refined Hub Authentication) ----------------
 @app.route("/login", methods=["GET","POST"])
 def login():
     if request.method == "POST":
@@ -82,16 +81,16 @@ def login():
         db = get_db()
         cur = db.cursor(dictionary=True)
 
-        # Query the Hub Database
+    
         cur.execute("SELECT * FROM users WHERE email=%s AND password=%s", (email, password))
         user = cur.fetchone()
 
         if not user:
-            # Triggers Red "Sync Failed" Popup
+        
             flash("Administrator email or key not found.", "error")
             return redirect(url_for("login"))
 
-        # Initialize Hub Session
+        
         session.clear()
         session["user_id"] = user["id"]
         session["role"] = user["role"]
@@ -100,37 +99,37 @@ def login():
 
         flash("Hub Sync Successful!", "success")
 
-        # Redirect based on Terminal Role
+        
         if user["role"] == "owner":
             return redirect(url_for("owner_dashboard"))
         else:
             return redirect(url_for("resident_dashboard"))
 
     return render_template("login.html")
-# ---------------- COMPLAINTS & LATE REASONS ----------------
+
 @app.route('/submit-complaint', methods=['POST'])
 def submit_complaint():
     if session.get("role") != "resident":
         return redirect(url_for("login"))
         
-    # Matches <select name="category"> and <textarea name="complaint_msg">
+
     category = request.form.get('category')
     message = request.form.get('complaint_msg')
     
     db = get_db()
     cur = db.cursor(dictionary=True)
     
-    # Identify the resident
+    
     cur.execute("SELECT id FROM residents WHERE user_id = %s", (session["user_id"],))
     resident = cur.fetchone()
 
     if resident:
-        # SQL matches the updated table fields: resident_id, category, message
+        
         cur.execute("""
             INSERT INTO complaints (resident_id, category, message, status) 
             VALUES (%s, %s, %s, 'pending')
         """, (resident['id'], category, message))
-        db.commit() # Critical for ensuring data is saved
+        db.commit() 
         flash("Complaint transmitted to owner.", "success")
     else:
         flash("Sync Error: Resident profile not found.", "error")
@@ -146,9 +145,40 @@ def reply_complaint(complaint_id):
     db = get_db()
     cur = db.cursor()
     
-    cur.execute("UPDATE complaints SET admin_reply=%s, status='resolved' WHERE id=%s", (reply_text, complaint_id))
-    flash("Response sent to resident terminal.", "success")
+    
+    cur.execute("""
+        INSERT INTO complaint_messages (complaint_id, sender_role, message) 
+        VALUES (%s, 'owner', %s)
+    """, (complaint_id, reply_text))
+    
+    
+    cur.execute("UPDATE complaints SET status='open' WHERE id=%s", (complaint_id,))
+    
+    flash("Reply sent. Conversation is now active.", "success")
     return redirect(url_for("owner_dashboard"))
+
+@app.route("/resident/reply-complaint/<int:complaint_id>", methods=["POST"])
+def resident_reply(complaint_id):
+    if session.get("role") != "resident": return redirect(url_for("login"))
+    
+    msg = request.form.get("message")
+    db = get_db(); cur = db.cursor()
+    cur.execute("INSERT INTO complaint_messages (complaint_id, sender_role, message) VALUES (%s, 'resident', %s)", 
+                (complaint_id, msg))
+    flash("Message sent to owner.", "success")
+    return redirect(url_for("resident_dashboard"))
+
+
+@app.route("/resident/resolve-complaint/<int:complaint_id>", methods=["POST"])
+def resolve_complaint(complaint_id):
+    if session.get("role") != "resident": return redirect(url_for("login"))
+    
+    db = get_db(); cur = db.cursor()
+    cur.execute("UPDATE complaints SET status='resolved' WHERE id=%s", (complaint_id,))
+    flash("Glad you are satisfied! Ticket closed.", "success")
+    return redirect(url_for("resident_dashboard"))
+
+
 
 @app.route("/submit-late-reason/<int:pay_id>", methods=["POST"])
 def submit_late_reason(pay_id):
@@ -164,18 +194,35 @@ def submit_late_reason(pay_id):
     return redirect(url_for("resident_dashboard"))
 
 
-# ---------------- OWNER DASHBOARD ----------------
-# ---------------- OWNER DASHBOARD ----------------
+
 @app.route("/owner-dashboard")
 def owner_dashboard():
     if session.get("role") != "owner":
         return redirect(url_for("login"))
 
+    owner_id = session["user_id"]
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # 1. Fetch individual payment stream
-    cur.execute("""
+    
+    cur.execute("SELECT * FROM properties WHERE owner_id = %s", (owner_id,))
+    properties = cur.fetchall()
+    
+    prop_ids = [p['id'] for p in properties]
+    
+    if not prop_ids:
+        return render_template("owner_dashboard.html", 
+                               properties=[], payments=[], 
+                               complaints=[], rooms=[], now=datetime.now())
+
+    format_strings = ','.join(['%s'] * len(prop_ids))
+
+    
+    cur.execute(f"SELECT * FROM rooms WHERE property_id IN ({format_strings})", tuple(prop_ids))
+    rooms = cur.fetchall()
+
+    
+    cur.execute(f"""
         SELECT p.id AS pay_id, u.name AS resident, r.resident_id, rm.room_no,
                b.title, b.month, p.amount, IFNULL(p.amount_paid,0) AS amount_paid, 
                p.status, r.property_id, p.created_at
@@ -184,36 +231,39 @@ def owner_dashboard():
         JOIN users u ON r.user_id=u.id
         JOIN rooms rm ON r.room_id=rm.id
         JOIN bills b ON p.bill_id=b.id
+        WHERE r.property_id IN ({format_strings})
         ORDER BY p.created_at DESC
-    """)
+    """, tuple(prop_ids))
     payments = cur.fetchall()
-    for p in payments:
-        p["due"] = p["amount"] - p["amount_paid"]
 
-    # 2. NEW: Fetch Complaints (Communication Hub) - FIXED WITH LEFT JOIN
-    cur.execute("""
-        SELECT 
-            c.id, 
-            c.category, 
-            c.message, 
-            c.status,
-            c.created_at,
-            IFNULL(u.name, 'Unknown Resident') as resident_name, 
-            IFNULL(rm.room_no, 'N/A') as room_no 
+    for p in payments:
+        p['due'] = float(p['amount']) - float(p['amount_paid'])
+
+    
+    cur.execute(f"""
+        SELECT c.id, c.category, c.message, c.status, c.created_at,
+               u.name as resident_name, rm.room_no 
         FROM complaints c
-        LEFT JOIN residents r ON c.resident_id = r.id
-        LEFT JOIN users u ON r.user_id = u.id
-        LEFT JOIN rooms rm ON r.room_id = rm.id
-        WHERE c.status = 'pending'
+        JOIN residents r ON c.resident_id = r.id
+        JOIN users u ON r.user_id = u.id
+        JOIN rooms rm ON r.room_id = rm.id
+        WHERE r.property_id IN ({format_strings}) AND c.status != 'resolved'
         ORDER BY c.created_at DESC
-    """)
+    """, tuple(prop_ids))
     complaints = cur.fetchall()
 
-    # 3. Fetch all properties
-    cur.execute("SELECT * FROM properties")
-    properties = cur.fetchall()
+    
+    
+    for c in complaints:
+        cur.execute("""
+            SELECT sender_role, message, created_at 
+            FROM complaint_messages 
+            WHERE complaint_id = %s 
+            ORDER BY created_at ASC
+        """, (c['id'],))
+        c['chat_history'] = cur.fetchall()
 
-    # 4. LIVE LOGISTICS: Calculate Profit/Loss per property
+    
     for prop in properties:
         cur.execute("""
             SELECT SUM(p.amount) as total, SUM(p.amount_paid) as paid 
@@ -233,36 +283,11 @@ def owner_dashboard():
             prop['profit_percent'] = 0
             prop['loss_percent'] = 100
 
-    cur.execute("SELECT * FROM rooms")
-    rooms = cur.fetchall()
+    return render_template("owner_dashboard.html", 
+                           properties=properties, rooms=rooms, 
+                           payments=payments, complaints=complaints,
+                           now=datetime.now())
 
-    # Merged variables passed to the template
-    return render_template(
-        "owner_dashboard.html",
-        payments=payments,
-        complaints=complaints, # <--- The critical addition
-        properties=properties,
-        rooms=rooms,
-        now=datetime.now()
-    )
-# ---------------- ADD ROOM ----------------
-@app.route("/add-room", methods=["POST"])
-def add_room():
-    if session.get("role") != "owner":
-        return redirect(url_for("login"))
-
-    db = get_db()
-    cur = db.cursor()
-    cur.execute("""
-        INSERT INTO rooms (room_no,capacity,property_id)
-        VALUES (%s,%s,%s)
-    """,(request.form["room_no"],
-         request.form["capacity"],
-         request.form["property_id"]))
-    flash("Room added successfully", "success")
-    return redirect(url_for("owner_dashboard"))
-
-# ---------------- ADD RESIDENT ----------------
 @app.route("/add-resident", methods=["POST"])
 def add_resident():
     if session.get("role") != "owner":
@@ -271,7 +296,7 @@ def add_resident():
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # AUTO GENERATE resident_id
+    
     cur.execute("""
         SELECT MAX(CAST(SUBSTRING(resident_id,4) AS UNSIGNED)) AS last
         FROM residents
@@ -289,8 +314,7 @@ def add_resident():
 
     flash(f"Resident added successfully. Resident ID: {resident_id}", "success")
     return redirect(url_for("owner_dashboard"))
-# ---------------- DISTRIBUTE RENT/BILL ----------------
-# --- Ensure this is in app.py and NOT inside an HTML tag ---
+
 @app.route("/add-bills", methods=["POST"])
 def add_bills():
     if session.get("role") != "owner":
@@ -338,7 +362,26 @@ def add_bills():
         flash(f"HUB DATABASE ERROR: {str(e)}", "error")
 
     return redirect(url_for("owner_dashboard"))
-# ---------------- SETTLE ROOMMATE SPLIT ----------------
+@app.route("/add-room", methods=["POST"])
+def add_room():
+    if session.get("role") != "owner":
+        return redirect(url_for("login"))
+
+    db = get_db()
+    cur = db.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO rooms (room_no, capacity, property_id)
+            VALUES (%s, %s, %s)
+        """, (request.form["room_no"],
+              request.form["capacity"],
+              request.form["property_id"]))
+        flash("Room initialized in your Asset Hub.", "success")
+    except Exception as e:
+        flash(f"Sync Error: {str(e)}", "error")
+        
+    return redirect(url_for("owner_dashboard"))
+
 @app.route("/settle-split/<int:split_id>")
 def settle_split(split_id):
     if session.get("role") != "resident":
@@ -347,14 +390,13 @@ def settle_split(split_id):
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # 1. Check if they already paid to prevent double entries
     cur.execute("SELECT id FROM private_settlements WHERE split_id=%s AND resident_name=%s", 
                (split_id, session['name']))
     if cur.fetchone():
         flash("You have already synced this payment.", "warning")
         return redirect(url_for("resident_dashboard"))
 
-    # 2. Record that the current user has paid this split
+    
     cur.execute("""
         INSERT INTO private_settlements (split_id, resident_name, status)
         VALUES (%s, %s, 'paid')
@@ -363,7 +405,7 @@ def settle_split(split_id):
     flash("Sync Successful! Your payment is now visible to the initiator.", "success")
     return redirect(url_for("resident_dashboard"))
 
-# ---------------- REAL SYNC VERIFICATION ----------------
+
 @app.route("/verify-transaction/<int:id_type>/<int:sync_id>", methods=["POST"])
 def verify_transaction(id_type, sync_id):
     if session.get("role") != "resident":
@@ -377,7 +419,7 @@ def verify_transaction(id_type, sync_id):
         flash("Invalid Transaction ID. Please enter the 12-digit UTR.", "error")
         return redirect(url_for("resident_dashboard"))
 
-    # id_type 1 = Official Bill, id_type 2 = Roommate Split
+    
     if id_type == 1:
         cur.execute("UPDATE payments SET status='paid', amount_paid=amount, reason=%s WHERE id=%s", (f"UTR: {utr_id}", sync_id))
     else:
@@ -386,7 +428,7 @@ def verify_transaction(id_type, sync_id):
 
     flash(f"Sync Verified! Transaction {utr_id} recorded.", "success")
     return redirect(url_for("resident_dashboard"))
-# ---------------- RESIDENT TERMINAL DASHBOARD ----------------
+
 @app.route("/resident-dashboard", methods=["GET", "POST"])
 def resident_dashboard():
     if session.get("role") != "resident":
@@ -395,7 +437,7 @@ def resident_dashboard():
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # 1. Fetch Current Resident Profile
+    
     cur.execute("""
         SELECT r.id, r.resident_id, r.room_id, rm.room_no, u.name 
         FROM residents r 
@@ -405,7 +447,7 @@ def resident_dashboard():
     """, (session["user_id"],))
     resident = cur.fetchone()
 
-    # 2. Get the roster of EVERYONE in this room (For Split Ledger)
+
     cur.execute("""
         SELECT u.name FROM residents r 
         JOIN users u ON r.user_id = u.id 
@@ -413,16 +455,26 @@ def resident_dashboard():
     """, (resident['room_id'],))
     room_roster = [row['name'] for row in cur.fetchall()]
 
-    # 3. NEW: Fetch Owner Replies/Complaints for this resident
+    
     cur.execute("""
-        SELECT category, message, admin_reply, status, created_at 
+        SELECT id, category, message, status, created_at 
         FROM complaints 
         WHERE resident_id = %s 
         ORDER BY created_at DESC
     """, (resident['id'],))
     my_complaints = cur.fetchall()
 
-    # 4. Fetch Splits and build the FULL Table logic
+    for c in my_complaints:
+        
+        cur.execute("""
+            SELECT sender_role, message, created_at 
+            FROM complaint_messages 
+            WHERE complaint_id = %s 
+            ORDER BY created_at ASC
+        """, (c['id'],))
+        c['chat_history'] = cur.fetchall()
+
+    
     cur.execute("SELECT id, resident_name, title, amount_per_person, created_at FROM private_splits WHERE room_id = %s ORDER BY created_at DESC", (resident['room_id'],))
     splits = cur.fetchall()
     
@@ -440,7 +492,7 @@ def resident_dashboard():
             })
         s['user_has_paid'] = session['name'] in paid_list or session['name'] == s['resident_name']
 
-    # 5. Standard Stats & Official Bills
+    
     cur.execute("SELECT COUNT(*) as count FROM residents WHERE room_id = %s", (resident['room_id'],))
     resident_count = cur.fetchone()['count']
     
@@ -458,37 +510,35 @@ def resident_dashboard():
                            payments=payments, 
                            resident_count=resident_count, 
                            private_splits=splits,
-                           my_complaints=my_complaints) # Pass replies to HTML
-# ---------------- BROADCAST PRIVATE SPLIT (FINAL) ----------------
+                           my_complaints=my_complaints)
+
 @app.route("/broadcast-private-split", methods=["POST"])
 def broadcast_private_split():
-    # 1. Security Check: Only residents can split bills
+    
     if session.get("role") != "resident":
         return redirect(url_for("login"))
 
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # 2. Fetch the sender's current room context
-    # This ensures the split only goes to their specific roommates
+   
     cur.execute("SELECT room_id FROM residents WHERE user_id = %s", (session["user_id"],))
     resident = cur.fetchone()
 
-    # 3. Destination Hub: Hardcoded for Demo to your SBI account
+    
     target_upi = "jiachinnu999@oksbi" 
 
-    # 4. Form Data Collection
+    
     title = request.form.get("title", "").strip()
     amount = request.form.get("amount", "")
 
-    # 5. Validation: Ensure values aren't empty
+    
     if not title or not amount:
         flash("Sync Hub Error: Missing description or amount.", "error")
         return redirect(url_for("resident_dashboard"))
 
     try:
-        # 6. Insert into private terminal table
-        # We use session.get('name') to prevent errors if name isn't in session
+        
         cur.execute("""
             INSERT INTO private_splits 
             (room_id, resident_name, upi_target, title, amount_per_person, created_at)
@@ -504,12 +554,12 @@ def broadcast_private_split():
         flash(f"Success: '{title}' split has been broadcasted to your roommates.", "success")
         
     except Exception as e:
-        # Catching database errors (like the missing column error)
+        
         flash(f"Terminal Error: {str(e)}", "error")
 
     return redirect(url_for("resident_dashboard"))
 
-# ---------------- OFFICIAL BILL SYNC ----------------
+
 @app.route("/pay-bill/<int:pay_id>")
 def pay_bill(pay_id):
     if session.get("role") != "resident":
@@ -518,7 +568,7 @@ def pay_bill(pay_id):
     db = get_db()
     cur = db.cursor()
     
-    # Mark as Paid in Terminal Database
+    
     cur.execute("UPDATE payments SET status='paid', amount_paid=amount WHERE id=%s", (pay_id,))
     
     flash("Terminal Sync Successful: Receipt generated for Owner.", "success")
@@ -531,11 +581,11 @@ def pay_roommate_split(split_id):
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # Get the actual resident ID of the person paying
+    
     cur.execute("SELECT id FROM residents WHERE user_id = %s", (session["user_id"],))
     payer = cur.fetchone()
 
-    # Record the settlement
+    
     cur.execute("""
         INSERT INTO private_settlements (split_id, resident_id, status)
         VALUES (%s, %s, 'paid')
@@ -543,13 +593,32 @@ def pay_roommate_split(split_id):
 
     flash("Sync Successful! Your payment has been recorded in the Room Hub.", "success")
     return redirect(url_for("resident_dashboard"))
-# ---------------- LOGOUT ----------------
+@app.route("/add-property", methods=["POST"])
+def add_property():
+    if session.get("role") != "owner":
+        return redirect(url_for("login"))
+
+    name = request.form["property_name"]
+    address = request.form["address"]
+    phone = request.form["phone"]
+    owner_id = session["user_id"] 
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("""
+        INSERT INTO properties (name, address, phone, owner_id) 
+        VALUES (%s, %s, %s, %s)
+    """, (name, address, phone, owner_id))
+    
+    flash(f"Asset {name} deployed to your terminal.", "success")
+    return redirect(url_for("owner_dashboard"))
+
 @app.route("/logout")
 def logout():
     session.clear()
     flash("Logged out successfully", "success")
     return redirect("/")
 
-# ---------------- RUN ----------------
+
 if __name__ == "__main__":
     app.run(debug=True)
