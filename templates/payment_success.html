@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sync Authorized | PG Sync Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            color: #0f172a; 
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+        }
+        
+        .success-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* INCREASED SIZE: From 400px to 650px for a massive screen presence */
+        .success-gif { 
+            width: 650px; 
+            height: auto;
+            z-index: 1;
+            /* Added a slight scale-up animation to match the GPay "Pop" */
+            animation: gpayPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes gpayPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .info-overlay {
+            z-index: 10;
+            text-align: center;
+            margin-top: -60px; /* Adjusted to sit perfectly under the large tick */
+        }
+
+        h1 { 
+            font-size: 3rem; 
+            color: #008730; 
+            margin: 0; 
+            text-transform: uppercase; 
+            letter-spacing: -2px;
+            font-weight: 800;
+        }
+        
+        .utr-display {
+            font-size: 1.4rem; 
+            color: #64748b; 
+            margin-top: 10px; 
+            font-weight: 700;
+            letter-spacing: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="success-container">
+        <img src="https://cdn.dribbble.com/users/147386/screenshots/5315437/success-tick-dribbble.gif" class="success-gif" alt="Success">
+        
+        <div class="info-overlay">
+            <h1>SYNC SUCCESSFUL</h1>
+            <div class="utr-display">UTR: {{ utr }}</div>
+        </div>
+    </div>
+
+    <script>
+        // Return to the resident dashboard automatically
+        setTimeout(() => {
+            window.location.href = "/resident-dashboard";
+        }, 5000);
+    </script>
+</body>
+</html>

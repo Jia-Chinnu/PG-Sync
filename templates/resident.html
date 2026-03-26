@@ -16,12 +16,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         body { background: var(--bg); color: var(--dark); min-height: 100vh; overflow-x: hidden; }
 
-        /* --- HYPER PARALLAX ENGINE --- */
         .parallax-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; background: radial-gradient(circle at top right, #f7fdf9, #ffffff); }
         .geo-shape { position: absolute; border: 2px solid var(--primary); opacity: 0.1; transition: transform 0.2s cubic-bezier(0.1, 0.7, 0.1, 1); pointer-events: none; }
         .shape-1 { width: 300px; height: 300px; top: -50px; left: -50px; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; background: var(--primary-glow); filter: blur(40px); }
-        .shape-2 { width: 150px; height: 150px; bottom: 10%; right: 10%; border-radius: 50%; border-width: 15px; }
-        .shape-3 { width: 80px; height: 80px; top: 40%; right: 20%; transform: rotate(45deg); border-width: 10px; }
 
         .container { max-width: 1400px; margin: 0 auto; padding: 30px; position: relative; animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -36,76 +33,76 @@
         .due-hero { 
             background: linear-gradient(135deg, #ffffff, #f1fdf5); padding: 50px; 
             border-radius: 40px; border: 1px solid var(--border); text-align: center; 
-            margin-bottom: 40px; position: relative; overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 135, 48, 0.1);
+            margin-bottom: 40px; box-shadow: 0 25px 50px -12px rgba(0, 135, 48, 0.1);
         }
         .due-amount { font-size: 4.5rem; font-weight: 800; color: var(--primary); letter-spacing: -3px; }
 
-        /* --- DYNAMIC TIMER & COMPLAINT STYLES --- */
-        .timer-node { font-family: monospace; font-weight: 800; font-size: 0.85rem; padding: 6px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; transition: 0.5s; }
+        /* --- VISUAL HELP DESK UPGRADE --- */
+        .ticket-card { background: white; border-radius: 25px; margin-bottom: 25px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.03); }
+        .ticket-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
+        .chat-container { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; max-height: 250px; overflow-y: auto; padding: 0 15px; }
+        .bubble { padding: 12px 18px; border-radius: 20px; font-size: 0.85rem; max-width: 80%; line-height: 1.5; }
+        .bubble.owner { align-self: flex-start; background: var(--primary-light); color: #065f46; border-bottom-left-radius: 5px; }
+        .bubble.resident { align-self: flex-end; background: var(--dark); color: white; border-bottom-right-radius: 5px; }
+        .status-tag { padding: 5px 15px; border-radius: 50px; font-size: 0.7rem; font-weight: 900; letter-spacing: 1px; }
+        .tag-resolved { background: #dcfce7; color: #15803d; }
+        .tag-pending { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+
+        /* --- LEDGER BREAKDOWN BADGES --- */
+        .badge-eye { padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
+        .bg-rent { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .bg-arrear { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+        .bg-fine { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+
+        /* --- PEER SPLIT ROSTER CHIPS --- */
+        .roster-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin: 4px; }
+        .chip-paid { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .chip-unpaid { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+        .timer-node { font-family: monospace; font-weight: 800; font-size: 0.85rem; padding: 6px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; }
         .t-safe { background: #dcfce7; color: #15803d; }
         .t-warn { background: #fef3c7; color: #b45309; }
         .t-critical { background: #fee2e2; color: #b91c1c; animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0.5; } }
-        
-        .complaint-btn { background: #f1f5f9; color: var(--error); border: 1px solid #fee2e2; padding: 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.3s; width: 100%; text-align: center; }
-        .complaint-btn:hover { background: var(--error); color: white; }
 
+        .pay-btn { background: linear-gradient(135deg, var(--primary), #00a83e); color: #fff; padding: 14px 28px; border-radius: 16px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px var(--primary-glow); }
+        
         .dashboard-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 30px; }
-        .card { background: var(--glass); padding: 35px; border-radius: 35px; border: 1px solid var(--border); backdrop-filter: blur(15px); margin-bottom: 30px; transition: 0.4s; }
+        .card { background: var(--glass); padding: 35px; border-radius: 35px; border: 1px solid var(--border); backdrop-filter: blur(15px); margin-bottom: 30px; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-        td { padding: 20px 15px; background: #ffffff; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
+        td { padding: 20px 15px; background: #ffffff; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
         td:first-child { border-radius: 15px 0 0 15px; }
         td:last-child { border-radius: 0 15px 15px 0; }
 
-        .pay-btn { background: linear-gradient(135deg, var(--primary), #00a83e); color: #fff; padding: 12px 24px; border-radius: 14px; font-weight: 700; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px var(--primary-glow); }
-
-        /* --- OVERLAY MODALS --- */
         .full-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(12px); }
-        .modal-card { background: white; padding: 45px; border-radius: 45px; text-align: center; max-width: 440px; width: 95%; border: 2px solid var(--primary); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; margin-bottom: 15px; font-weight: 600; resize: none; font-size: 0.9rem; }
+        .modal-card { background: white; padding: 45px; border-radius: 45px; text-align: center; max-width: 440px; width: 95%; border: 2px solid var(--primary); }
+        textarea { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; margin-bottom: 15px; font-weight: 600; resize: none; font-size: 0.9rem; }
         select { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #f1f5f9; margin-bottom: 15px; font-weight: 600; }
-
-        /* --- CHAT ENGINE STYLES --- */
-        .chat-thread { margin-bottom: 15px; max-height: 200px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 15px; }
-        .bubble { margin-bottom: 10px; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; line-height: 1.4; max-width: 85%; }
-        .bubble.owner { background: var(--primary-light); color: var(--dark); border-left: 4px solid var(--primary); align-self: flex-start; }
-        .bubble.resident { background: white; color: #475569; border: 1px solid #e2e8f0; margin-left: auto; }
     </style>
 </head>
 <body>
-    <div class="parallax-wrapper">
-        <div class="geo-shape shape-1" id="s1"></div>
-        <div class="geo-shape shape-2" id="s2"></div>
-        <div class="geo-shape shape-3" id="s3"></div>
-    </div>
+    <div class="parallax-wrapper"><div class="geo-shape shape-1"></div></div>
 
     <div id="syncOverlay" class="full-overlay">
         <div class="modal-card">
-            <h2 style="font-weight: 800; color: var(--dark);">BANK GATEWAY</h2>
-            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 25px;">Verify sync with Ref No / UTR</p>
-            <img id="qrImage" src="" style="width: 220px; height: 220px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #eee;">
+            <h2 style="font-weight: 800;">BANK GATEWAY</h2>
+            <img id="qrImage" src="" style="width: 220px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #eee;">
             <div id="qrAmount" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); margin-bottom: 10px;"></div>
             <form id="verifyForm" method="POST">
                 <input type="text" name="utr_id" style="width:100%; padding:15px; border-radius:15px; border:2px solid #eee; text-align:center; font-weight:800; letter-spacing:3px; margin-bottom:15px;" placeholder="12-DIGIT UTR" required maxlength="12">
                 <button type="submit" class="pay-btn" style="width: 100%; height: 60px;">VALIDATE & SYNC</button>
             </form>
-            <button onclick="closeModal('syncOverlay')" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-weight: 700;">CANCEL</button>
+            <button onclick="closeModal('syncOverlay')" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-weight: 700; cursor:pointer;">CANCEL</button>
         </div>
     </div>
 
-    <div id="reasonOverlay" class="full-overlay">
-        <div class="modal-card" style="border-color: var(--error);">
-            <h2 style="color: var(--error); font-weight: 800;">LATE REASON LOG</h2>
-            <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">Balance will roll to next month upon Admin approval. Submit your justification.</p>
-            <form id="reasonForm" method="POST">
-                <textarea name="reason_text" placeholder="Why is the sync delayed? (e.g., Salary delayed, App issue)" required></textarea>
-                <button type="submit" class="pay-btn" style="background: var(--dark); width: 100%;">SUBMIT TO ADMIN</button>
-            </form>
-            <button onclick="closeModal('reasonOverlay')" style="margin-top: 15px; border: none; background: none; color: #94a3b8;">CLOSE</button>
+    <div id="billProofOverlay" class="full-overlay" onclick="closeModal('billProofOverlay')">
+        <div class="modal-card" style="max-width: 600px; background:white; padding:30px; border-radius:30px;" onclick="event.stopPropagation()">
+            <h2 style="font-weight: 800; margin-bottom: 20px;">BILL VERIFICATION</h2>
+            <div style="background: #f8fafc; border-radius: 20px; border: 1px dashed var(--primary); overflow:hidden;">
+                <img id="proofImage" src="" style="width: 100%; display:block;">
+            </div>
+            <button onclick="closeModal('billProofOverlay')" class="pay-btn" style="margin-top: 25px; width: 100%; background: var(--dark);">CLOSE PREVIEW</button>
         </div>
     </div>
 
@@ -116,80 +113,73 @@
         </header>
 
         <div class="due-hero">
-            <p style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">Pending Network Balance</p>
+            <p style="color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">Current Network Balance</p>
             <div class="due-amount">₹ 
                 {% set total_due = namespace(val=0) %}
-                {% for p in payments if p.status == 'pending' %}{% set total_due.val = total_due.val + p.amount %}{% endfor %}
+                {% for p in payments if p.status != 'paid' %}{% set total_due.val = total_due.val + p.amount %}{% endfor %}
                 {{ "%.2f"|format(total_due.val) }}
             </div>
         </div>
 
         <div class="dashboard-grid">
             <div class="content-left">
-                <div class="card" style="border-left: 8px solid var(--primary); background: #f0fdf4;">
-                    <h3><i class="bi bi-chat-square-dots-fill"></i> Management Feedback Loop</h3>
-                    <div style="margin-top: 15px;">
-                        {% for c in my_complaints %}
-                        <div style="background: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <span style="font-size: 0.7rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">{{ c.category }}</span>
-                                <span class="timer-node {{ 't-safe' if c.status == 'resolved' else 't-warn' }}">{{ c.status|upper }}</span>
+                
+                <div class="card" style="border-left: 8px solid var(--primary);">
+                    <h3 style="margin-bottom:20px;"><i class="bi bi-chat-right-text-fill"></i> Help Desk Activity</h3>
+                    {% for c in my_complaints %}
+                    <div class="ticket-card">
+                        <div class="ticket-header">
+                            <div><span style="font-weight: 800; color: #64748b; font-size: 0.75rem;">Ticket #{{ c.id }}</span><b style="margin-left: 10px;">{{ c.category|upper }}</b></div>
+                            <span class="status-tag {{ 'tag-resolved' if c.status == 'resolved' else 'tag-pending' }}">{{ c.status|upper }}</span>
+                        </div>
+                        <div style="padding: 25px;">
+                            <p style="color: #475569; font-weight: 600;">{{ c.message }}</p>
+                            <div class="chat-container">
+                                {% for chat in c.chat_history %}<div class="bubble {{ chat.sender_role }}"><small style="display:block; font-size:0.6rem; font-weight:800; margin-bottom:3px; opacity:0.7;">{{ chat.sender_role|upper }}</small>{{ chat.message }}</div>{% endfor %}
                             </div>
-                            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 12px;"><b>Original Issue:</b> {{ c.message }}</p>
-                            
-                            <div class="chat-thread">
-                                {% for chat in c.chat_history %}
-                                <div class="bubble {{ chat.sender_role }}">
-                                    <small style="font-weight: 800; font-size: 0.6rem; text-transform: uppercase;">{{ chat.sender_role }}</small>
-                                    <p>{{ chat.message }}</p>
-                                </div>
-                                {% endfor %}
-                            </div>
-
                             {% if c.status != 'resolved' %}
-                            <div style="border-top: 1px solid #f1f5f9; padding-top: 15px;">
-                                <form action="/resident/reply-complaint/{{ c.id }}" method="POST" style="margin-bottom: 10px;">
-                                    <input type="text" name="message" placeholder="Type your follow-up reply..." required style="width:100%; padding:12px; border-radius:12px; border:1px solid #eee; margin-bottom:10px; font-size: 0.85rem;">
-                                    <button type="submit" class="pay-btn" style="width: 100%; background: var(--dark); padding: 10px; font-size: 0.7rem;">SEND REPLY</button>
-                                </form>
-                                <form action="/resident/resolve-complaint/{{ c.id }}" method="POST">
-                                    <button type="submit" class="pay-btn" style="width: 100%; padding: 10px; font-size: 0.7rem;">I AM SATISFIED (CLOSE TICKET)</button>
-                                </form>
+                            <div style="display: flex; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                                <form action="/resident/reply-complaint/{{ c.id }}" method="POST" style="flex: 1; display: flex; gap: 8px;"><input type="text" name="message" placeholder="Type follow-up..." required style="flex:1; padding:12px; border-radius:12px; border:2px solid #f1f5f9;"><button type="submit" class="pay-btn" style="padding: 10px 20px; font-size: 0.8rem; background: var(--dark);">SEND</button></form>
+                                <form action="/resident/resolve-complaint/{{ c.id }}" method="POST"><button type="submit" class="pay-btn" style="padding: 10px 20px; font-size: 0.8rem; background: #f1f5f9; color: var(--primary); box-shadow: none;">RESOLVE</button></form>
                             </div>
-                            {% else %}
-                            <p style="text-align: center; font-size: 0.8rem; color: var(--primary); font-weight: 800;"><i class="bi bi-check-circle-fill"></i> LOGGED AS SATISFIED</p>
                             {% endif %}
                         </div>
-                        {% else %}
-                        <p style="font-size: 0.85rem; color: #94a3b8; font-style: italic;">No active tickets in terminal.</p>
-                        {% endfor %}
                     </div>
+                    {% endfor %}
                 </div>
 
                 <div class="card">
-                    <h3><i class="bi bi-lightning-charge-fill"></i> Sync Stream</h3>
+                    <h3><i class="bi bi-lightning-charge-fill" style="color:var(--primary)"></i> Official Ledger</h3>
                     <table>
-                        <thead><tr><th>Details</th><th>Deadline / Status</th><th>Value</th><th>Action</th></tr></thead>
+                        <thead><tr style="color: #64748b; font-size: 0.75rem;"><th>SOURCE & DATE</th><th>TIMER</th><th>BREAKDOWN</th><th>ACTION</th></tr></thead>
                         <tbody>
                             {% for p in payments %}
                             <tr>
-                                <td><b>{{ p.title }}</b><br><small style="color:#94a3b8">{{ p.month }}</small></td>
                                 <td>
-                                    {% if p.status == 'paid' %}
-                                        <div style="color: var(--primary); font-weight: 800; font-size: 0.85rem;"><i class="bi bi-patch-check-fill"></i> SYNCED: {{ p.created_at.strftime('%d %b') }}</div>
-                                    {% else %}
-                                        <div class="timer-node countdown" data-expire="{{ p.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}" id="timer-{{ p.pay_id }}">Initializing...</div>
-                                        <button id="comp-btn-{{ p.pay_id }}" onclick="openReasonPortal('{{ p.pay_id }}')" class="complaint-btn" style="display:none; margin-top: 8px;">
-                                            <i class="bi bi-exclamation-triangle"></i> SUBMIT LATE REASON
-                                        </button>
+                                    <b style="font-size: 1.1rem; color: var(--dark);">{{ p.title }}</b><br>
+                                    <small style="color:var(--primary); font-weight:800; display: block; margin: 3px 0;">{{ p.month }}</small>
+                                    <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 700;"><i class="bi bi-calendar-event"></i> Initiated: {{ p.created_at.strftime('%d %b, %Y') }}</div>
+                                    
+                                    {% if p.bill_image %}
+                                    <button onclick="viewBillProof('{{ p.bill_image }}')" style="margin-top: 8px; width: 100%; background: var(--primary-light); color: var(--primary); border: none; padding: 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; cursor: pointer;"><i class="bi bi-eye-fill"></i> VIEW BILL</button>
                                     {% endif %}
                                 </td>
-                                <td style="font-weight: 800;">₹ {{ p.amount }}</td>
                                 <td>
-                                    {% if p.status == 'pending' %}
-                                        <button id="pay-btn-{{ p.pay_id }}" onclick="openSyncTerminal('{{ p.amount }}', 'Rent', '{{ p.pay_id }}', true)" class="pay-btn">SYNC</button>
-                                    {% else %}
-                                        <div style="color: var(--primary); font-weight: 800;"><i class="bi bi-check-all"></i> VERIFIED</div>
+                                    {% if p.status == 'paid' %}<div class="timer-node t-safe"><i class="bi bi-patch-check-fill"></i> SYNCED</div>
+                                    {% else %}<div class="timer-node countdown" data-expire="{{ p.created_at.strftime('%Y-%m-%dT%H:%M:%S') }}" id="timer-{{ p.pay_id }}">Syncing...</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                                        <span class="badge-eye bg-rent">{{ p.title }}: ₹{{ "%.2f"|format(p.current_amount|default(0)) }}</span>
+                                        {% if p.arrear_amount > 0 %}<span class="badge-eye bg-arrear">ARREAR: ₹{{ "%.2f"|format(p.arrear_amount) }}</span>{% endif %}
+                                        {% if p.fine_amount > 0 %}<span class="badge-eye bg-fine">FINE: ₹{{ "%.2f"|format(p.fine_amount) }}</span>{% endif %}
+                                    </div>
+                                    <div style="font-weight: 900; color: var(--dark); font-size: 1.1rem;">Total: ₹{{ "%.2f"|format(p.amount) }}</div>
+                                </td>
+                                <td>
+                                    {% if p.status == 'paid' %}<i class="bi bi-check-circle-fill" style="color:var(--primary); font-size: 1.8rem;"></i>
+                                    {% else %}<button id="pay-btn-{{ p.pay_id }}" onclick="openSyncTerminal('{{ p.amount }}', '{{ p.title }}', '{{ p.pay_id }}', true)" class="pay-btn">PAY</button>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -199,55 +189,53 @@
                 </div>
 
                 <div class="card" style="border-top: 6px solid var(--dark);">
-                    <h3><i class="bi bi-people-fill"></i> Room Hub Ledger</h3>
-                    {% if private_splits %}
+                    <h3><i class="bi bi-people-fill"></i> Roommate Peer Splits</h3>
+                    <div style="margin-top: 20px;">
                         {% for s in private_splits %}
-                        <div style="margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <div><h4 style="color: var(--primary);">{{ s.title }}</h4><small>Request by {{ s.resident_name }}</small></div>
-                                <div style="font-size: 1.6rem; font-weight: 800;">₹ {{ "%.2f"|format(s.amount_per_person) }}</div>
+                        <div style="background: white; padding: 25px; border-radius: 25px; margin-bottom: 20px; border: 1px solid var(--border);">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                                <div><h4 style="font-weight:800;">{{ s.title }}</h4><small>From <b>{{ s.resident_name }}</b></small></div>
+                                <div style="text-align:right;"><div style="font-size: 1.4rem; font-weight: 900; color: var(--primary);">₹ {{ "%.2f"|format(s.amount_per_person) }}</div></div>
                             </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                            <div style="background: #f8fafc; padding: 12px; border-radius: 15px; margin-bottom: 15px;">
+                                <p style="font-size: 0.6rem; font-weight: 800; color: #94a3b8; margin-bottom: 5px;">COLLECTION STATUS</p>
                                 {% for member in s.full_ledger %}
-                                    <div style="background: #fff; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px;">
-                                        <span style="font-weight: 700; font-size: 0.8rem;">{{ member.name }}</span>
-                                        {% if member.is_paid %}<i class="bi bi-check-circle-fill" style="color: var(--primary);"></i>{% else %}<i class="bi bi-circle" style="color: #cbd5e1;"></i>{% endif %}
-                                    </div>
+                                <span class="roster-chip {{ 'chip-paid' if member.is_paid else 'chip-unpaid' }}">
+                                    <i class="bi {{ 'bi-check-circle-fill' if member.is_paid else 'bi-clock-history' }}"></i> {{ member.name }}
+                                </span>
                                 {% endfor %}
                             </div>
-                            {% if not s.user_has_paid %}
-                                <button onclick="openSyncTerminal('{{ s.amount_per_person }}', 'Split', '{{ s.id }}', false)" class="pay-btn" style="background: var(--dark); width: 100%;">PAY SHARE</button>
+                            {% if not s.user_has_paid %}<button onclick="openSyncTerminal('{{ s.amount_per_person }}', 'Split: {{ s.title }}', '{{ s.id }}', false)" class="pay-btn" style="width: 100%;">SEND SETTLEMENT</button>
+                            {% else %}<div style="text-align:center; color:var(--primary); font-weight:800;"><i class="bi bi-patch-check"></i> SETTLED</div>
                             {% endif %}
                         </div>
                         {% endfor %}
-                    {% endif %}
+                    </div>
                 </div>
             </div>
 
             <div class="content-right">
-                <div class="card" style="border: 2px solid var(--primary);">
-                    <h3>Broadcast Split</h3>
+                <div class="card" style="border: 2px solid var(--primary); background: #f0fdf4;">
+                    <h3 style="color:var(--primary); margin-bottom:10px;"><i class="bi bi-calculator-fill"></i> Room Splitter</h3>
                     <form action="/broadcast-private-split" method="POST">
-                        <input type="text" name="title" placeholder="Description" required style="width:100%; padding:15px; border-radius:15px; border: 1px solid #f1f5f9; margin-bottom: 12px;">
-                        <input type="number" id="split-total" oninput="autoCalc()" placeholder="Total ₹" required style="width:100%; padding:15px; border-radius:15px; border: 1px solid #f1f5f9; margin-bottom: 12px;">
+                        <input type="text" name="title" placeholder="Description" required style="width:100%; padding:15px; border-radius:15px; border: 1px solid #dcfce7; margin-bottom: 12px;">
+                        <input type="number" id="split-total" oninput="autoCalc()" placeholder="Total ₹" required style="width:100%; padding:15px; border-radius:15px; border: 1px solid #dcfce7; margin-bottom: 12px;">
                         <input type="hidden" name="amount" id="final-split-val">
-                        <div id="split-result" style="text-align: center; padding: 25px; background: var(--primary-light); border-radius: 20px; font-weight: 800; color: var(--primary); font-size: 2rem;">₹ 0.00</div>
-                        <button type="submit" style="width: 100%; margin-top: 20px; background: var(--dark);" class="pay-btn">SEND TO ROOM</button>
+                        <div id="split-result" style="text-align: center; padding: 25px; background: white; border-radius: 20px; font-weight: 800; color: var(--primary); font-size: 2rem; border:1px solid #dcfce7;">₹ 0.00</div>
+                        <button type="submit" style="width: 100%; margin-top: 20px; background: var(--dark);" class="pay-btn">DEPLOY SPLIT</button>
                     </form>
                 </div>
 
                 <div class="card" style="border-top: 6px solid var(--error);">
-                    <h3><i class="bi bi-megaphone-fill"></i> Help & Support</h3>
-                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">Report maintenance issues or billing discrepancies.</p>
+                    <h3><i class="bi bi-megaphone-fill" style="color:var(--error)"></i> Help Desk</h3>
                     <form action="/submit-complaint" method="POST">
                         <select name="category" required>
-                            <option value="maintenance">Maintenance / Repair</option>
-                            <option value="billing">Billing Error</option>
-                            <option value="amenities">WiFi / Water / Electricity</option>
-                            <option value="other">Other</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="billing">Billing Inquiry</option>
+                            <option value="amenities">Wifi / Utilities</option>
                         </select>
-                        <textarea name="complaint_msg" placeholder="Describe your issue in detail..." required></textarea>
-                        <button type="submit" class="pay-btn" style="background: var(--error); width: 100%;">RAISE TICKET</button>
+                        <textarea name="complaint_msg" placeholder="Explain your issue..." required></textarea>
+                        <button type="submit" class="pay-btn" style="background: var(--error); width: 100%;">SUBMIT TICKET</button>
                     </form>
                 </div>
             </div>
@@ -256,40 +244,33 @@
 
     <script>
         const MY_UPI = "jiachinnu999@oksbi";
-        const DEADLINE_DAYS = 7;
-
         function updateTimers() {
+            const now = new Date();
             document.querySelectorAll('.countdown').forEach(timer => {
-                const createdDate = new Date(timer.dataset.expire);
-                const deadline = new Date(createdDate.getTime() + (DEADLINE_DAYS * 24 * 60 * 60 * 1000));
-                const now = new Date();
-                const diff = deadline - now;
+                const initiationDate = new Date(timer.dataset.expire);
                 const payId = timer.id.split('-')[1];
+                const lockoutDay = new Date(initiationDate); lockoutDay.setDate(initiationDate.getDate() + 21);
+                const diff = lockoutDay - now;
                 const payBtn = document.getElementById('pay-btn-' + payId);
-                const compBtn = document.getElementById('comp-btn-' + payId);
-
-                if (diff <= 0) {
-                    timer.innerHTML = "<i class='bi bi-clock-history'></i> OVERDUE";
+                if (now >= lockoutDay) {
+                    timer.innerHTML = "OVERDUE: LOCKED";
                     timer.className = "timer-node t-critical";
                     if(payBtn) payBtn.style.display = 'none';
-                    if(compBtn) compBtn.style.display = 'block';
-                    return;
+                } else {
+                    const d = Math.floor(diff / 86400000);
+                    const h = Math.floor((diff % 86400000) / 3600000);
+                    timer.innerHTML = `<i class='bi bi-hourglass-split'></i> ${d}d ${h}h left`;
+                    timer.className = d < 3 ? "timer-node t-warn" : "timer-node t-safe";
                 }
-
-                const d = Math.floor(diff / 86400000);
-                const h = Math.floor((diff % 86400000) / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                const s = Math.floor((diff % 60000) / 1000);
-
-                timer.innerHTML = `<i class='bi bi-hourglass-split'></i> ${d}d ${h}h ${m}m ${s}s`;
-                
-                if (d < 1) timer.className = "timer-node t-critical";
-                else if (d < 3) timer.className = "timer-node t-warn";
-                else timer.className = "timer-node t-safe";
             });
         }
         setInterval(updateTimers, 1000);
         updateTimers();
+
+        function viewBillProof(imgName) {
+            document.getElementById('proofImage').src = "/static/uploads/bills/" + imgName;
+            document.getElementById('billProofOverlay').style.display = 'flex';
+        }
 
         function openSyncTerminal(amt, note, id, isOff) {
             const upiUrl = `upi://pay?pa=${MY_UPI}&pn=PG_SYNC&am=${amt}&tn=${encodeURIComponent(note)}&cu=INR`;
@@ -300,20 +281,7 @@
             document.getElementById('syncOverlay').style.display = 'flex';
         }
 
-        function openReasonPortal(id) {
-            document.getElementById('reasonForm').action = `/submit-late-reason/${id}`;
-            document.getElementById('reasonOverlay').style.display = 'flex';
-        }
-
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.pageX) / 25;
-            const y = (window.innerHeight / 2 - e.pageY) / 25;
-            document.getElementById('s1').style.transform = `translate(${x}px, ${y}px)`;
-            document.getElementById('s2').style.transform = `translate(${-x}px, ${-y}px)`;
-        });
-
         function autoCalc() {
             const total = document.getElementById('split-total').value;
             const count = {{ resident_count|default(1) }};
