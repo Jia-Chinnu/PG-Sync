@@ -52,16 +52,157 @@ scheduler.start()
 
 # Database Connection
 # Database Connection
-# Database Connection
 def get_db():
-    return mysql.connector.connect(
-        host=os.getenv("MYSQLHOST"),
-        port=int(os.getenv("MYSQLPORT")),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        autocommit=True
-    )
+   # Database Connection with Auto-Schema Setup
+def get_db():
+    try:
+        connection = mysql.connector.connect(
+            host=os.getenv("MYSQLHOST"),
+            port=int(os.getenv("MYSQLPORT", 3306)),
+            user=os.getenv("MYSQLUSER"),
+            password=os.getenv("MYSQLPASSWORD"),
+            database=os.getenv("MYSQLDATABASE"),
+            autocommit=True
+        )
+        
+        # Verify that your tables exist, create them if they do not
+        cursor = connection.cursor()
+        
+        # 1. USERS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(50) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # 2. PROPERTIES TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS properties (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                address TEXT NOT NULL,
+                phone VARCHAR(50),
+                owner_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 3. ROOMS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS rooms (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                room_no VARCHAR(50) NOT NULL,
+                capacity INT NOT NULL,
+                property_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 4. RESIDENTS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS residents (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                resident_id VARCHAR(50) UNIQUE,
+                email VARCHAR(255) NOT NULL,
+                property_id INT NOT NULL,
+                room_id INT NOT NULL,
+                user_id INT NULL,
+                verified INT DEFAULT 0,
+                rollovers_used INT DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 5. BILLS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS bills (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                amount DECIMAL(10,2) NOT NULL,
+                month VARCHAR(50) NOT NULL,
+                property_id INT NOT NULL,
+                bill_image VARCHAR(255) NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 6. PAYMENTS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                resident_id INT NOT NULL,
+                bill_id INT NOT NULL,
+                amount DECIMAL(10,2) NOT NULL,
+                current_amount DECIMAL(10,2) NOT NULL,
+                arrear_amount DECIMAL(10,2) DEFAULT 0.0,
+                fine_amount DECIMAL(10,2) DEFAULT 0.0,
+                amount_paid DECIMAL(10,2) DEFAULT 0.0,
+                status VARCHAR(50) DEFAULT 'pending',
+                month_year VARCHAR(50) NOT NULL,
+                reason TEXT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 7. COMPLAINTS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS complaints (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                resident_id INT NOT NULL,
+                category VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 8. COMPLAINT MESSAGES TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS complaint_messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                complaint_id INT NOT NULL,
+                sender_role VARCHAR(50) NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 9. PRIVATE SPLITS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS private_splits (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                room_id INT NOT NULL,
+                resident_name VARCHAR(255) NOT NULL,
+                upi_target VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                amount_per_person DECIMAL(10,2) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 10. PRIVATE SETTLEMENTS TABLE
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS private_settlements (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                split_id INT NOT NULL,
+                resident_name VARCHAR(255) NULL,
+                resident_id INT NULL,
+                status VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.close()
+        return connection
+    except Exception as e:
+        print("DB CONNECTION/INITIALIZATION ERROR:", e)
+        raise
+
 # --- 4. CORE NOTIFICATION ENGINE ---
 def send_detailed_billing_emails():
     """Loops through residents and sends full invoice breakdown"""
