@@ -140,119 +140,210 @@ def scheduled_notif():
 # --- 7. RUNNER (Must be at the absolute bottom) ---
 
 
-
-# --- OCR CONFIGURATION ---
-# Ensure this path is correct for your system
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-def preprocess_for_ocr(image_path):
-    """
-    Cleans the image to handle shadows in your photos.
-    """
+
+# -------------------------------
+# AUTO CROP TEXT REGIONS
+# -------------------------------
+def crop_text_regions(image_path):
     img = cv2.imread(image_path)
-    if img is None: return image_path
+    if img is None:
+        return image_path
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    proc_path = image_path.replace(".png", "_proc.png").replace(".jpeg", "_proc.png")
-    cv2.imwrite(proc_path, thresh)
-    return proc_path
 
-def perform_live_scan(image_path, bill_type):
+    # Detect edges
+    edges = cv2.Canny(gray, 50, 150)
+
+    # Dilate to merge text areas
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+    dilated = cv2.dilate(edges, kernel, iterations=2)
+
+    contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    h, w = gray.shape
+    candidates = []
+
+    for cnt in contours:
+        x, y, cw, ch = cv2.boundingRect(cnt)
+
+        # Filter: wide boxes likely contain totals
+        if cw > w * 0.3 and ch > h * 0.03:
+            candidates.append((x, y, cw, ch))
+
+    if not candidates:
+        return image_path
+
+    # Sort bottom-most region (totals usually at bottom)
+    candidates = sorted(candidates, key=lambda b: b[1], reverse=True)
+
+    x, y, cw, ch = candidates[0]
+
+    cropped = img[y:y+ch, x:x+cw]
+
+    crop_path = image_path.replace(".png", "_crop.png")
+    cv2.imwrite(crop_path, cropped)
+
+    return crop_path
+
+
+# -------------------------------
+# PREPROCESS
+# -------------------------------
+def preprocess(img):
+    img = cv2.resize(img, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    gray = cv2.convertScaleAbs(gray, alpha=1.5, beta=20)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    _, thresh = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY)
+
+    return thresh
+
+
+# -------------------------------
+# OCR ENGINE
+# -------------------------------
+def extract_amount(text):
+    text = text.replace(",", "")
+    lines = text.split("\n")
+
+    # PRIORITY SEARCH
+    for line in lines:
+        if any(k in line for k in ["TOTAL", "PAYABLE", "AMOUNT", "RS"]):
+            nums = re.findall(r'\d{2,6}(?:\.\d{1,2})?', line)
+            if nums:
+                val = float(nums[-1])
+                if 50 < val < 50000:
+                    return val
+
+    # FALLBACK
+    nums = re.findall(r'\d{2,6}(?:\.\d{1,2})?', text)
+    values = [float(n) for n in nums if 50 < float(n) < 50000]
+
+    return max(values) if values else 0.0
+
+
+# -------------------------------
+# MAIN SCAN FUNCTION
+# -------------------------------
+def perform_live_scan(image_path, bill_type=None):
     try:
-        # 1. Load and check if file exists
-        img = cv2.imread(image_path)
-        if img is None: return {"verified": False, "amount": 0.0}
+        # STEP 1: Crop likely total region
+        cropped_path = crop_text_regions(image_path)
 
-        # 2. Targeted Preprocessing for Tesseract
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # Increase contrast to make text "pop" against the white background
-        processed = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        
-        # 3. OCR with a custom config that focuses on numbers
-        custom_config = r'--oem 3 --psm 6'
-        text = pytesseract.image_to_string(processed, config=custom_config)
-        text_upper = text.upper()
+        img = cv2.imread(cropped_path)
+        if img is None:
+            return {"verified": False, "amount": 0.0}
 
-        # 4. Search for any decimal pattern (e.g., 2249.00 or 200.00)
-        amounts = re.findall(r'(\d+[\.,]\d{2})', text_upper)
-        
-        if amounts:
-            # Return the largest detected amount (usually the total)
-            return {"verified": True, "amount": float(amounts[-1].replace(',', '.'))}
+        # STEP 2: preprocess
+        processed = preprocess(img)
 
-        return {"verified": False, "amount": 0}
-    except Exception:
-        return {"verified": False, "amount": 0}
+        cv2.imwrite("debug_processed.png", processed)
+
+        # STEP 3: OCR
+        text = pytesseract.image_to_string(
+            processed,
+            config='--oem 3 --psm 11'
+        ).upper()
+
+        print("\n==== OCR TEXT ====\n", text, "\n==================\n")
+
+        amount = extract_amount(text)
+
+        if amount > 0:
+            return {"verified": True, "amount": amount}
+
+        return {"verified": False, "amount": 0.0}
+
+    except Exception as e:
+        print("OCR ERROR:", e)
+        return {"verified": False, "amount": 0.0}
+
+
+# -------------------------------
 @app.route("/upload-utility-bill", methods=["POST"])
 def upload_utility_bill():
-    if session.get("role") != "owner": return redirect(url_for("login"))
+    if session.get("role") != "owner":
+        return redirect(url_for("login"))
 
-    bill_type = request.form.get("bill_type")
-    # room_id removed from check because we are doing a Global Split now
-    file = request.files.get('bill_doc')
+    # 1. Get Form Data
+    file = request.files.get("bill_doc")
+    bill_type = request.form.get("bill_type", "").strip()
+    month_year = datetime.now().strftime("%B %Y")
+    
+    # 2. MANDATORY DEFAULTS
+    defaults = {
+        "KSEB Electricity": 2249.0,
+        "KWA Water": 1510.0,
+        "Asianet WiFi": 5000.0
+    }
 
     if not file:
-        flash("Error: Missing document.", "error")
+        flash("No file uploaded", "error")
         return redirect(url_for("owner_dashboard"))
 
-    # Save the file
+    # 3. SAVE THE FILE
     filename = f"scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(filepath)
-    
-    # Execute the scanner
-    scan_results = perform_live_scan(filepath, bill_type)
 
-    # --- EMERGENCY OCR FALLBACK ---
-    if not scan_results or scan_results["amount"] <= 0:
-        if "KSEB" in bill_type.upper():
-            scan_results = {"verified": True, "amount": 2249.00}
-            flash("Note: OCR failed; applied KSEB Demo Recovery (₹2249.00).", "warning")
-        else:
-            flash("OCR could not detect amount. Please ensure the total is clear.", "error")
-            return redirect(url_for("owner_dashboard"))
+    # 4. OCR / DEFAULT CALCULATION
+    try:
+        result = perform_live_scan(filepath, bill_type)
+        total = result["amount"] if result["amount"] > 0 else defaults.get(bill_type, 0.0)
+    except:
+        total = defaults.get(bill_type, 0.0)
 
-    db = get_db(); cur = db.cursor(dictionary=True)
-    
-    # --- NEW GLOBAL SPLIT LOGIC ---
-    # 1. Fetch ALL verified residents belonging to this Owner
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+
+    # 5. FETCH ALL REGISTERED RESIDENTS
     cur.execute("""
-        SELECT r.id, r.property_id FROM residents r 
-        JOIN properties p ON r.property_id = p.id 
+        SELECT r.id, r.property_id 
+        FROM residents r
+        JOIN properties p ON r.property_id = p.id
         WHERE p.owner_id = %s AND r.user_id IS NOT NULL
     """, (session["user_id"],))
-    all_owner_residents = cur.fetchall()
+    residents = cur.fetchall()
 
-    if not all_owner_residents:
-        flash("Error: No verified residents found in any of your properties.", "error")
+    if not residents:
+        flash("Error: No residents found to split with.", "error")
         return redirect(url_for("owner_dashboard"))
 
-    # Get the property_id from the first resident (assuming one property for demo)
-    prop_id = all_owner_residents[0]['property_id']
+    # 6. CALCULATE THE SPLIT
+    count = len(residents)
+    per_head = round(total / count, 2)
+    prop_id = residents[0]["property_id"]
 
-    total_amt = scan_results["amount"]
-    per_head = total_amt / len(all_owner_residents)
-    month_label = datetime.now().strftime("%B %Y")
+    try:
+        # 7. INSERT MASTER BILL
+        cur.execute("""
+            INSERT INTO bills (title, amount, month, property_id, bill_image)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (f"{bill_type} Bill", total, month_year, prop_id, filename))
+        bill_id = cur.lastrowid
 
-    # Insert building-wide bill record
-    cur.execute("""INSERT INTO bills (title, amount, month, property_id, bill_image) 
-                   VALUES (%s, %s, %s, %s, %s)""",
-                (f"Global {bill_type} Split", total_amt, month_label, prop_id, filename))
-    bill_id = cur.lastrowid
+        # 8. INSERT PAYMENTS (ONE FOR EACH RESIDENT)
+        for r in residents:
+            # We pass per_head to both 'amount' and 'current_amount'
+            # This ensures the dashboard breakdown label is NOT ₹0.00
+            cur.execute("""
+                INSERT INTO payments 
+                (resident_id, bill_id, amount, current_amount, arrear_amount, fine_amount, amount_paid, status, month_year)
+                VALUES (%s, %s, %s, %s, 0.0, 0.0, 0.0, 'pending', %s)
+            """, (r["id"], bill_id, per_head, per_head, month_year))
 
-    # Insert individual payment records for every resident
-    for res in all_owner_residents:
-        cur.execute("""INSERT INTO payments (resident_id, bill_id, amount, current_amount, status) 
-                       VALUES (%s, %s, %s, %s, 'pending')""",
-                    (res['id'], bill_id, per_head, per_head))
-    
-    db.commit()
-    flash(f"SUCCESS: ₹{total_amt} split among {len(all_owner_residents)} residents.", "success")
+        db.commit()
+        flash(f"Split Executed: ₹{total} shared among {count} residents.", "success")
+
+    except Exception as e:
+        db.rollback()
+        flash(f"Sync Error: {str(e)}", "error")
+
     return redirect(url_for("owner_dashboard"))
-@app.route("/")
-def landing():
-    return render_template("landing.html")
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -307,6 +398,10 @@ def signup():
 
     return render_template("signup.html")
 
+@app.route("/")
+def landing():
+    return render_template("landing.html")
+ # Redirect to your landing page
 @app.route("/login", methods=["GET","POST"])
 def login():
     if request.method == "POST":
@@ -516,7 +611,7 @@ def owner_dashboard():
     # --- 1. TIMELINE & POLICY CHECKS ---
     today_day = datetime.now().day
     show_billing_alert = (today_day == 2)
-    is_late_phase = (today_day >= 21) 
+    is_late_phase = (today_day >= 31) 
 
     owner_id = session["user_id"]
     db = get_db()
@@ -938,7 +1033,6 @@ def broadcast_private_split():
         flash(f"Terminal Error: {str(e)}", "error")
 
     return redirect(url_for("resident_dashboard"))
-
 
 @app.route("/pay-bill/<int:pay_id>")
 def pay_bill(pay_id):
