@@ -51,15 +51,17 @@ scheduler.init_app(app)
 scheduler.start()
 
 # Database Connection
+# Database Connection
+# Database Connection
 def get_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="pgsync_user",
-        password="pgsync123",
-        database="pg_sync",
+        host=os.getenv("MYSQLHOST"),
+        port=int(os.getenv("MYSQLPORT")),
+        user=os.getenv("MYSQLUSER"),
+        password=os.getenv("MYSQLPASSWORD"),
+        database=os.getenv("MYSQLDATABASE"),
         autocommit=True
     )
-
 # --- 4. CORE NOTIFICATION ENGINE ---
 def send_detailed_billing_emails():
     """Loops through residents and sends full invoice breakdown"""
@@ -139,8 +141,7 @@ def scheduled_notif():
 
 # --- 7. RUNNER (Must be at the absolute bottom) ---
 
-
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 
 # -------------------------------
