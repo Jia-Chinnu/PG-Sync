@@ -54,9 +54,9 @@ scheduler.start()
 # Database Connection
 def get_db():
    # Database Connection with Auto-Schema Setup
-def get_db():
+
     try:
-        connection = mysql.connector.connect(
+        return mysql.connector.connect(
             host=os.getenv("MYSQLHOST"),
             port=int(os.getenv("MYSQLPORT", 3306)),
             user=os.getenv("MYSQLUSER"),
@@ -64,6 +64,7 @@ def get_db():
             database=os.getenv("MYSQLDATABASE"),
             autocommit=True
         )
+    
         
         # Verify that your tables exist, create them if they do not
         cursor = connection.cursor()
